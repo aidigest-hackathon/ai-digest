@@ -282,6 +282,7 @@ def get_complex_summary():
 #         "draft_version": 0  # Initialize as 0
 #     })
     print(result)
+    return result
 
 class StyleGen:
     def __init__(self, draft):
