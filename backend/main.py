@@ -18,6 +18,7 @@ from dotenv import load_dotenv
 import os 
 import openai
 from pydantic import BaseModel, Field
+from typing import Optional
 import json 
 
 load_dotenv()
@@ -170,7 +171,7 @@ def should_continue(state: SummaryState):
 
 
 
-def langchain_driver():
+def get_complex_summary():
     # Create the graph
     workflow = StateGraph(SummaryState)
 
@@ -203,11 +204,60 @@ The dominant sequence transduction models are based on complex recurrent or conv
         "entities": [],  # Initialize with an empty list
         "draft_version": 0  # Initialize as 0
     })
-    print(result)
+    return result 
+
+class StyleGen:
+    def __init__(self, draft):
+        self.draft = draft 
+        self.client = openai.OpenAI(
+            base_url="https://api.fireworks.ai/inference/v1",
+            api_key=os.getenv("FIREWORKS_API_KEY"),
+        )  
+
+
+    def get_styled(self, style_prompt):        
+        history = [{
+                "role": "user",
+                "content": style_prompt,
+            }]
+        
+        chat_completion = self.client.chat.completions.create(
+            model="accounts/fireworks/models/llama-v3p1-70b-instruct",
+            messages=history
+        )
+
+        return chat_completion.choices[0].message.content
+         
+
 
 
 def driver():
-    langchain_driver()
+    summary_state = get_complex_summary()
+    breakpoint()
+    complex_summary = summary_state["draft_summary"]
+
+    styler = StyleGen(complex_summary)
+    beginner_prompt = f"""Given a technical summary of a computer science research paper, please output a beginner-friendly summary with no additional explanation or starting text, just the final summary itself.
+    Your input is summary: {{Summary}}
+
+    Summary: {complex_summary}"""
+
+    intermediate_prompt = f"""Given a technical summary of a computer science research paper, please output an intermediately technical summary with no additional explanation or starting text, just the final summary itself.
+    Your input is summary: {{Summary}}
+
+    Summary: {complex_summary}"""
+
+    beginning_summary = styler.get_styled(beginner_prompt)
+    intermediate_summary = styler.get_styled(intermediate_prompt)
+
+    new_state = summary_state.copy()
+    new_state["beginner_result"] = beginning_summary
+    new_state["intermediate_result"] = intermediate_summary
+    new_state["advanced_result"] = complex_summary
+    return new_state
+
+
+
 
 
 if __name__ == "__main__":
