@@ -1,0 +1,11 @@
+Given the following abstract and summary of a computer science research paper, we want to change the style of the summary to become more beginner friendly. We are targeting a general audience who is enthusiastic about AI, but may not be familiar with the technical jargon. The summary should be simple and easy to understand, while maintaining core details. Focus on providing a practical interpretation of the results and general summary of the line of research. It is ok to miss specific details as long as the main idea is preserved.
+
+Title: {{title}}
+
+Abstract: {{abstract}}
+
+Summary: {{summary}}
+
+Please output a beginner-friendly summary with no additional explanation or starting text, just the final summary itself.
+
+_Summary_

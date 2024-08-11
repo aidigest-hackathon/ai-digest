@@ -1,0 +1,40 @@
+Given the following abstract and pre-processed segments of a computer science research paper, we want to generate a summary that is concise yet dense in information.
+
+Title: {{title}}
+
+Abstract: {{abstract}}
+
+Introduction: {{introduction}}
+
+Methodology: {{methodology}}
+
+Results: {{results}}
+
+Conclusion: {{conclusion}}
+
+This will proceed with increasingly helpful and entity-dense summaries of the article.
+
+Step 1. Identify 2-3 informative entities from the paper which are missing from the previously generated summary. 
+Step 2. Write a new, denser summary of identical length which covers every entity and detail from the previous summary plus the new "Missing Entities". A Missing Entity is:
+  - Relevant: to the main story.
+  - Specific: descriptive yet concise (5 words or fewer).
+  - Novel: not in the previous summary.
+  - Faithful: present in the Article.
+  - Anywhere: located anywhere in the Article.
+
+We are dealing with the first version of the summary, which should be 5-7 bulletpoint or around ~80 words. Feel free to start with highly non-specific, containing little information beyond the entities marked as missing. Use overly verbose language and fillers (e.g., "this article discusses") to reach ~80 words.
+Missing entities can appear anywhere in the new summary. Never drop entities from the previous summary. If space cannot be made, add fewer new entities.
+
+Your final response should be in well-formatted JSON whose keys are "missing_entities" (list) and "summary" (string). There should be no further text or explanation in the response.
+
+For example,
+_Output_
+```json
+{{
+  "missing_entities": ["entity1", "entity2"],
+  "summary": "The authors describe a method of synthesizing data using an external data corpus for improving the diversity. This works well enough, but has drawbacks due to the complexity of the pipeline. The key innovations include a novel sub-sampling procedure as well as a new method for data augmentation."
+}}
+
+Now it is your turn, please generate relevant entities and a denser summary.
+
+_Output_

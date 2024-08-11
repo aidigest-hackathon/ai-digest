@@ -1,0 +1,10 @@
+Given the following abstract and results sections of a computer science research paper, we want to generate a summary of this segment that is concise yet dense in information.
+Other sections, such as the introduction, methods, and conclusion, may provide additional context for the article, but we are only interested in summarizing the results section at the moment.
+
+Title: {{title}}
+
+Abstract: {{abstract}}
+
+Results: {{results}}
+
+Please include all possibly relevant information from the results section, such as the key findings, statistical significance, major impacts, and any other relevant data points. Your output should be roughly five (5) paragraphs long, capturing the essence of the results without going into unnecessary detail.

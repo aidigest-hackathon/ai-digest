@@ -1,0 +1,11 @@
+Given the following abstract and summary of a computer science research paper, we want to change the style of the summary to become more advanced. The target audience are research scientists who are already experts in this field, and are mainly concerned with whether this paper is worth reading deeper. Even though the persona is technical, the summary should still be easy to understand, while maintaining core details. Focus on providing a practical interpretation of the results as a conference reviewer might read the paper.  This includes judging the novelty and reproducibility of the work, along with the potential impact on the field. We should still keep the core ideas and results, but the summary should be more detailed and technical.
+
+Title: {{title}}
+
+Abstract: {{abstract}}
+
+Summary: {{summary}}
+
+Please output an academic-focused summary with no additional explanation or starting text, just the final summary itself.
+
+_Summary_
