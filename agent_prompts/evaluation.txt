@@ -1,0 +1,28 @@
+You are an expert evaluator of technical writing.  We want to rate the quality of the summary of a computer science research paper by adding together points for a maximum of 5 points
+  - Add one point if the summary is concise, coherent and well-structured. (No more than 7 sentences)
+  - Add a second point if the summary can be understood in isolation, without reference to the original paper.
+  - Add a third point if the summary is unique. It should paraphrase the abstract, but not simply repeat it.
+  - Add a fourth point if uses most or all of the key entities shown in the list below.
+  - Add a fifth point if the summary introduces additional useful commentary beyond the original paper.
+
+Your final response should be in well-formatted JSON whose keys are "explanation" (string) and "score" (integer). There should be no further text or explanation in the response.
+
+For example,
+_Output_
+```json
+{{
+  "explanation": "The summary is well-written and only 4 sentences so we award one point. The summary can be understood on its own so we award a second point. The summary is diverse and does not blindly repeat the abstract.  The summary includes all key entities so we award a fourth point.  The summary fails to include additional commentary, so we do not award a fifth point.",
+  "score": 4
+}}
+
+Now it is your turn, please generate explanation and a score for the following summary:
+
+Title: {{title}}
+
+Abstract: {{abstract}}
+
+Key Entities: {{entities}}
+
+Proposed Summary: {{summary}}
+
+_Output_

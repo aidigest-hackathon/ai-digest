@@ -1,0 +1,11 @@
+Given the following abstract and methodology segment of a computer science research paper, we want to generate a summary of this segment that is concise yet dense in information.
+Other sections, such as the introduction, results, and conclusion, may provide additional context for the article, but we are only interested in summarizing the methodology section at the moment.
+
+Title: {{title}}
+
+Abstract: {{abstract}}
+
+Methodology: {{methodology}}
+
+Please include all possibly relevant information from the methodology section, such as the experimental design, data collection methods, data analysis techniques, and any other key steps involved in the research process. Your output should be roughly five (5) paragraphs long, capturing the essence of the methodology without going into unnecessary detail.
+
