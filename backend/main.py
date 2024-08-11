@@ -27,6 +27,13 @@ class SummaryState(TypedDict):
     research_paper: str
     draft_summary: str
     evaluation: bool 
+    date: str
+    title: str
+    beginner_result: Optional[str]
+    intermediate_result: Optional[str]
+    advanced_result: Optional[str]
+    image_path: Optional[str]
+    link: Optional[str]
 
 
 class GPTSummarizer:
