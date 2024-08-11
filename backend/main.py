@@ -171,7 +171,6 @@ def should_continue(state: SummaryState):
         return END
 
 
-
 def get_complex_summary():
     # Create the graph
     workflow = StateGraph(SummaryState)
@@ -206,7 +205,7 @@ The dominant sequence transduction models are based on complex recurrent or conv
         "draft_version": 0  # Initialize as 0
     }
     result = app.invoke(example)
-    return example, result
+    return result
 
 class StyleGen:
     def __init__(self, draft):
