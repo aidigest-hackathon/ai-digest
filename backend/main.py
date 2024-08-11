@@ -19,7 +19,8 @@ import os
 import openai
 from pydantic import BaseModel, Field
 from typing import Optional
-import json 
+import json
+from nodes.write_to_sql_node import create_connection, create_table, insert_state
 
 load_dotenv()
 
@@ -193,7 +194,7 @@ def get_complex_summary():
     app = workflow.compile()
 
     # Run the graph
-    result = app.invoke({
+    example = {
         "research_paper": """Abstract
 The dominant sequence transduction models are based on complex recurrent or convolutional neural networks that include an encoder and a decoder. The best performing models also connect the encoder and decoder through an attention mechanism. We propose a new simple network architecture, the Transformer, based solely on attention mechanisms, dispensing with recurrence and convolutions entirely. Experiments on two machine translation tasks show these models to be superior in quality while being more parallelizable and requiring significantly less time to train. Our model achieves 28.4 BLEU on the WMT 2014 English-to-German translation task, improving over the existing best results, including ensembles, by over 2 BLEU. On the WMT 2014 English-to-French translation task, our model establishes a new single-model state-of-the-art BLEU score of 41.8 after training for 3.5 days on eight GPUs, a small fraction of the training costs of the best models from the literature. We show that the Transformer generalizes well to other tasks by applying it successfully to English constituency parsing both with large and limited training data.
 
@@ -203,8 +204,9 @@ The dominant sequence transduction models are based on complex recurrent or conv
         "keep_refining": True,  # Initialize as should continue 
         "entities": [],  # Initialize with an empty list
         "draft_version": 0  # Initialize as 0
-    })
-    return result 
+    }
+    result = app.invoke(example)
+    return example, result
 
 class StyleGen:
     def __init__(self, draft):
@@ -232,7 +234,7 @@ class StyleGen:
 
 
 def driver():
-    summary_state = get_complex_summary()
+    summary_state, example_inputs = get_complex_summary()
     breakpoint()
     complex_summary = summary_state["draft_summary"]
 
@@ -257,8 +259,23 @@ def driver():
     return new_state
 
 
+def upload_to_bucket(state):
+    database = "states.db"
+    
+    # Create a database connection
+    conn = create_connection(database)
+    
+    if conn:
+        # Create the table
+        create_table(conn)
+        
+        # Insert the state record
+        insert_state(conn, state)
 
+        # Close the connection
+        conn.close()
 
 
 if __name__ == "__main__":
-    driver()
+    new_state = driver()
+    upload_to_bucket(new_state)
