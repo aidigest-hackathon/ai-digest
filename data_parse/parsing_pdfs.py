@@ -120,9 +120,12 @@ def workflow(pdf_link):
         # return
     with open(f"{pdf_no}/abstract.txt", "w") as f:
         f.write(abstract)
-    final_text = f"--- ABSTRACT ---\n{abstract}\n"
-    for section, content in sections.items():
-        final_text += f"--- {section.upper()} ---\n"
+
+    final_text = f"--- ABSTRACT ---\n{abstract}\n"    
+    for raw_sec_name, content in sections.items():
+        section = classify_section(raw_sec_name, content)
+
+        final_text += f"--- {raw_sec_name.upper()} ---\n"
         final_text += content
         final_text += "\n"
         with open(f"{pdf_no}/{section.lower()}.txt", "w") as f:
@@ -131,6 +134,19 @@ def workflow(pdf_link):
     with open(f"{pdf_no}_final_text.txt", "w") as f:
         f.write(final_text)
 
+def classify_section(sec_name, content):
+    # assign each section to a category of either introduction, methods, results, or conclusion.
+    tokens = sec_name.split()
+    if "introduction" in tokens or 'related' in tokens:
+        return "introduction"
+    elif "conclusion" in tokens or 'discussion' in tokens:
+        return "conclusion"
+    else:
+        for tag in ['experiment', 'setup', 'method', 'model', 'approach']:
+            if tag in sec_name:
+                return "methods"
+
+    return "results"
 
 if __name__ == "__main__":
     pdf_link = "https://arxiv.org/pdf/2408.02545"
