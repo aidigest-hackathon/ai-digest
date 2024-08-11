@@ -16,3 +16,6 @@ langchainhub
 pypdf
 langchain-community
 python-dotenv
+PyMuPDF
+bs4
+langchain-fireworks
