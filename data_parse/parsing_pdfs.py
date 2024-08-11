@@ -52,7 +52,7 @@ def parse_pdf(arxiv_no):
 
 def extract_sections_by_regex(text):
     # Regex pattern to match the start of a section
-    pattern = r"((?m)^(?:\d|([IVXL]+\.))\s[A-Za-z-]+\s*(?:[A-Za-z-]+\s*){0,3}\n)"
+    pattern = r"((?m)^(?:\d|[IVXL]+\.)\s[A-Za-z-:]+\s*(?:[A-Za-z-]+\s*){0,3}\n)"
 
     # Find all matches for the section headers
     headers = re.finditer(pattern, text)
@@ -107,31 +107,33 @@ def extract_sections_around_abstract(text):
         return None, None, None
 
 
-def workflow():
-    for pdf_no in ["2104.00783", "2408.04633", "2408.04632", "2408.04631", "2408.04628", "2401.07061"]:
-    # for pdf_no in ["2401.07061"]:
-        text = parse_pdf(pdf_no)
-        before_abstract, abstract, after_abstract = extract_sections_around_abstract(text)
-        cleaned_text = remove_text_after_references(after_abstract)
-        sections = extract_sections_by_regex(cleaned_text)
-        if len(sections) < 4:
-            print(f"Error: {pdf_no} has less than 4 sections, it only has {len(sections)} sections")
-            continue
-        with open(f"{pdf_no}/abstract.txt", "w") as f:
-            f.write(abstract)
-        final_text = f"--- ABSTRACT ---\n{abstract}\n"
-        for section, content in sections.items():
-            final_text += f"--- {section.upper()} ---\n"
-            final_text += content
-            final_text += "\n"
-            with open(f"{pdf_no}/{section.lower()}.txt", "w") as f:
-                f.write(content)
+def workflow(pdf_link):
+    pdf_no = pdf_link.split("/")[-1]
+    # for pdf_no in ["2408.02442", "2408.02479", "2408.04632", "2408.04631", "2408.04628", "2401.07061"]:
+    # # for pdf_no in ["2401.07061"]:
+    text = parse_pdf(pdf_no)
+    before_abstract, abstract, after_abstract = extract_sections_around_abstract(text)
+    cleaned_text = remove_text_after_references(after_abstract)
+    sections = extract_sections_by_regex(cleaned_text)
+    if len(sections) < 4:
+        print(f"Error: {pdf_no} has less than 4 sections, it only has {len(sections)} sections")
+        # return
+    with open(f"{pdf_no}/abstract.txt", "w") as f:
+        f.write(abstract)
+    final_text = f"--- ABSTRACT ---\n{abstract}\n"
+    for section, content in sections.items():
+        final_text += f"--- {section.upper()} ---\n"
+        final_text += content
+        final_text += "\n"
+        with open(f"{pdf_no}/{section.lower()}.txt", "w") as f:
+            f.write(content)
 
-        with open(f"{pdf_no}_final_text.txt", "w") as f:
-            f.write(final_text)
+    with open(f"{pdf_no}_final_text.txt", "w") as f:
+        f.write(final_text)
 
 
 if __name__ == "__main__":
-    workflow()
+    pdf_link = "https://arxiv.org/pdf/2408.02545"
+    workflow(pdf_link)
 
 
