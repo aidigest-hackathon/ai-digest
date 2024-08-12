@@ -13,16 +13,16 @@ _ = load_dotenv(find_dotenv()) # read local .env file
 
 openai.api_key  = os.environ['OPENAI_API_KEY']
 
-def parse_pdf(arxiv_no):
-    url = f"https://arxiv.org/pdf/{arxiv_no}"
-    response = requests.get(url)
-    pdf_file = "paper.pdf"
+def parse_pdf(pdf_path:str):
+    # url = f"https://arxiv.org/pdf/{arxiv_no}"
+    # response = requests.get(url)
+    # pdf_file = "paper.pdf"
 
-    with open(pdf_file, 'wb') as f:
-        f.write(response.content)
-    
+    # with open(pdf_file, 'wb') as f:
+    #     f.write(response.content)
 
-    loader = PyPDFLoader("paper.pdf")
+
+    loader = PyPDFLoader(pdf_path)
     pages = loader.load()
     text = ""
     for page in pages:
@@ -30,7 +30,7 @@ def parse_pdf(arxiv_no):
 
     pdf_document = fitz.open(pdf_file)
 
-    os.makedirs(arxiv_no, exist_ok=True)
+    # os.makedirs(arxiv_no, exist_ok=True)
 
     for page_number in range(len(pdf_document)):
         page = pdf_document[page_number]
