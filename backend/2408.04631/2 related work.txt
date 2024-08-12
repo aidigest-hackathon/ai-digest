@@ -1,0 +1,28 @@
+2 Related Work
+Generative models. Recent advances in generative models, largely powered by diffusion mod-
+els [23–25], have enabled photo-realistic synthesis of images [ 26–28] and videos [ 29–31,20], and
+been extended to various other modalities [ 32,33]. The generation is mainly controlled by a text
+or image prompt. Recent works have explored ways to leverage these models’ prior knowledge,
+via either score distillation sampling [ 34–37] or fine-tuning on specialized data for downstream
+applications, such as multi-view images for 3D asset generation [38–43].
+Video generation for motion. Attempts to model object motion often resort to pre-defined shape
+models, e.g., SMPL [ 1] for humans and SMAL [ 2] for quadrupeds, which are constrained to a single
+or only a few categories. Videos have been considered as a unified representation that can capture
+general object dynamics [ 5]. However, existing video generators pre-trained on Internet videos
+often suffer from incoherent or minimal motion. Researchers have considered explicitly controlling
+video generation with motion trajectories. Drag-A-Video [ 44] extends the framework proposed by
+DragGAN [ 8] to videos. This method is training-free, relying on the motion prior captured by the
+pre-trained video generator, which is often not strong enough to produce high-quality videos. Hence,
+other works focus on training-based methods, which learn drag-based control using ad-hoc training
+data for this task. Early efforts such as iPoke [ 6] and YODA [ 45] train variational autoencoders
+or diffusion models to synthesize videos with objects in motion, conditioned on sparse motion
+trajectories sampled from optical flow. Generative Image Dynamics [ 10] uses a Fourier-based motion
+representation suitable for natural, oscillatory dynamics such as those of trees and candles, and
+generates motion for these categories with a diffusion model. DragNUWA [ 9] and others [ 11,16–18]
+fine-tune pre-trained video generators on large-scale curated datasets, enabling drag-based control
+in open-domain video generation. However, these methods do notallow controlling motion at the
+level of object parts, as their training data entangles multiple factors, including camera viewpoint and
+object scaling and re-positioning, making it hard to obtain a model of part-level motion. Concurrent
+works leverage the motion prior captured by video generative models for the related 4D generation
+task [ 46–49]. These models, however, lack the capability of explicit dragging control, which we
+tackle in this work.

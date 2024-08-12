@@ -1,0 +1,64 @@
+1 Introduction
+We consider learning an open-ended model of the motion of natural objects, which can understand
+their internal dynamics. Most models of dynamic objects are ad-hoc and only work for a specific
+family of related objects, such as humans or quadrupeds [ 1,2], severely limiting their generality.
+More open-ended models like [ 3] do not use such constrained shape priors but are difficult to scale
+due to the lack of suitable training data ( i.e., vertex-aligned 3D meshes). Therefore, we require a
+more general framework to learn a universal model of motion. This framework must be flexible
+enough to model very different types of internal dynamics ( e.g., part articulation, sliding of parts, and
+soft deformations). Furthermore, it must be able to tap substantial quantities of training data.
+Recently, video generators learned from millions of videos have been proposed as proxies of world
+models, i.e., models of any kind of natural phenomena, including motion. Such models may implicitly
+understand object dynamics; however, generating videos is insufficient: a useful model of object
+dynamics must be able to make predictions about the motion of given objects.
+Inspired by DragAPart [ 4] and [ 5], we thus consider performing such predictions by learning a
+conditional video generator. This generator takes as input a single image of an object and one or more
+drags which specify the motion of selected physical points of the object; it then outputs a plausible
+video of the entire object motion consistent with the drags (Fig. 1).
+Several authors have already considered incorporating drag-like motion prompts in image or video
+generation [ 6–18]. Many such works utilize techniques like ControlNet [ 19] to inject motion control
+in a pre-trained generator. However, these models tend to respond to drags by shifting or scaling anarXiv:2408.04631v1  [cs.CV]  8 Aug 2024DragNUWAOurs: Puppet-Master
+(a)(b)(c)(d)
+DragAnything
+(f)
+(e)
+Ours: Puppet-MasterFigure 1: Part-level dynamics vs.shifting or scaling an entire object. Puppet-Master generates
+videos depicting part-level motion, prompted by one or more drags.
+entire object and fail to capture their internal dynamics (Fig. 1), such as a drawer sliding out of a
+cabinet or a fish swinging its tail. The challenge is encouraging generative models to synthesize such
+internal, part-level dynamics.
+While DragAPart has already considered this challenge, its results are limited for two reasons. First,
+the diversity of its training data is poor, as it primarily focuses on renderings of 3D furniture. Second,
+it starts from an image generator instead of a video generator. Consequently, it cannot benefit from
+the motion prior that a video generator trained on a large scale may already have captured, and can
+only capture the end frame of the motion.
+In this work, we thus explore the benefits of learning a motion model from a pre-trained video
+generator while also significantly scaling the necessary training data to larger, more diverse sources.
+To do so, we start from Stable Video Diffusion (SVD) [ 20] and show how to re-purpose it for motion
+prediction. We make the following contributions.
+First, we propose new conditioning modules to inject the dragging control into the video generation
+pipeline effectively. In particular, we find that adaptive layer normalization [21] is much more
+effective than the shift-based modulation proposed by [ 4]. We further observe that the cross-attention
+modules of the image-conditioned SVD model lack spatial awareness, and propose to add drag tokens
+to these modules for better conditioning. We also address the degradation in appearance quality
+that often arises when fine-tuning video generators on out-of-distribution datasets by introducing
+all-to-first attention, where all generated frames attend the first one via modified self-attention. This
+design creates a shortcut that allows information to propagate from the conditioning frame to the
+others directly, significantly improving generation quality.
+Our second contribution is data curation: we provide two datasets to learn part-level object motion.
+Both datasets comprise subsets of the more than 40k animated assets from Objaverse [ 22]. These
+animations vary in quality: some display realistic object dynamics, while others feature objects
+2that (i) are static, (ii) exhibit simple translations, rotations, or scaling, or (iii) move in a physically
+implausible way. We introduce a systematic approach to curate the animations at scale. The resulting
+datasets, Objaverse-Animation and Objaverse-Animation-HQ, contain progressively fewer animations
+of higher quality. We show that Objaverse-Animation-HQ, which contains fewer but higher-quality
+animations, leads to a better model than Objaverse-Animation, demonstrating the effectiveness of the
+data curation.
+With this, we train Puppet-Master , a video generative model that, given as input a single image of an
+object and corresponding drags, generates an animation of the object. These animations are faithful
+to both the input image and the drags while containing physically plausible motions at the level of
+the individual object parts . The same model works for a diverse set of object categories. Empirically,
+it outperforms prior works on multiple benchmarks. Notably, while our model is fine-tuned using
+only synthetic data, it generalizes well to real data, outperforming prior models that were fine-tuned
+on real videos. It does so in a zero-shot manner by generalizing to out-of-distribution, real-world data
+without further tuning.

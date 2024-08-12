@@ -110,23 +110,20 @@ def build_state(date:str):
 
     state = {}
     
-    # research_papers = get_paper_info(date) # returns a list of dict with pdf_link and title
-    research_papers = [{'pdf_link': '/ai-digest/backend/documents/2022 PACIFIC Tabular Dataset.pdf'}, {'pdf_title': 'backend/documents/2212.10060.pdf'}]
-
-    
-    for research_paper in research_papers[:1]:
-        # parsed_paper = workflow(research_paper['pdf_link']) # returns a list of strings
-        parsed_paper = []
-        for file in os.listdir('2408.04632'):
+    papers = ["2408.04632", "2104.00783", "2408.02545", "2408.04628", "2408.04631", "2408.04633"]
+    parsed_paper = []
+    for paper in papers:
+        
+        for file in os.listdir(paper):
             if file.endswith('.txt'):
-                with open(os.path.join('2408.04632', file), 'r') as f:
+                with open(os.path.join(paper, file), 'r') as f:
                     parsed_paper.append(f.read())
 
-        state['research_paper'] = parsed_paper
-        state['draft_summary'] = ""
-        state['keep_refining'] = True
-        state['entities'] = []
-        state['draft_version'] = 0
+            state['research_paper'] = parsed_paper
+            state['draft_summary'] = ""
+            state['keep_refining'] = True
+            state['entities'] = []
+            state['draft_version'] = 0
 
     return state
 
@@ -275,6 +272,21 @@ def get_complex_summary():
     # Compile the graph
     app = workflow.compile()
 
+    from IPython.display import Image, display
+
+    try:
+    # Generate the image bytes from the graph
+        graph_image = app.get_graph(xray=True).draw_mermaid_png()
+        
+        # Save the image bytes to a file
+        with open("graph.png", "wb") as f:
+            f.write(graph_image)
+        
+        print("Graph saved as graph.png")
+    
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        
     state = build_state('2024-08-08')
 
     result = app.invoke(state)
@@ -305,8 +317,8 @@ class StyleGen:
 
 
 def driver():
-    summary_state, example_inputs = get_complex_summary()
-    breakpoint()
+    summary_state = get_complex_summary()
+
     complex_summary = summary_state["draft_summary"]
 
     styler = StyleGen(complex_summary)
@@ -349,4 +361,4 @@ def upload_to_bucket(state):
 
 if __name__ == "__main__":
     new_state = driver()
-    upload_to_bucket(new_state)
+    # upload_to_bucket(new_state)

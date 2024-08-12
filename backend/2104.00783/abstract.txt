@@ -1,0 +1,22 @@
+Existing goal-oriented dialogue datasets focus
+mainly on identifying slots and values. How-
+ever, customer support interactions in reality
+often involve agents following multi-step pro-
+cedures derived from explicitly-deﬁned com-
+pany policies as well. To study customer ser-
+vice dialogue systems in more realistic set-
+tings, we introduce the Action-Based Con-
+versations Dataset (ABCD), a fully-labeled
+dataset with over 10K human-to-human di-
+alogues containing 55 distinct user intents
+requiring unique sequences of actions con-
+strained by policies to achieve task success.
+We propose two additional dialog tasks, Ac-
+tion State Tracking and Cascading Dialogue
+Success, and establish a series of baselines in-
+volving large-scale, pre-trained language mod-
+els on this dataset. Empirical results demon-
+strate that while more sophisticated networks
+outperform simpler models, a considerable
+gap (50.8% absolute accuracy) still exists to
+reach human-level performance on ABCD.1

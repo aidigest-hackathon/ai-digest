@@ -1,0 +1,243 @@
+5 Experiments
+5.1 Implementation and Experimental Settings
+We implement VSH and BTH in Python, using the Numba package.
+General framework. We build our code base starting from SE-CFF [43] –
+state-of-the-art for event-based stereo – assuming the same stereo backbone as
+in their experiments, i.e. derived from AANet [72], and run SBN to generate the
+event history to be stacked. While we select a single architecture, we implement
+a variety of stacked representations: purposely, we implement a single instance
+of the stereo backbone for any stacked representations introduced in Sec. 3,
+taking the opportunity to evaluate their performance with the event stereo task.
+For Concentration representation, we use MDES as the prior stacking function
+following [43] and avoid considering future events during training. Furthermore,
+in this case, VSH is applied before the concentration network since it would
+interfere with gradient back-propagation during training – while this cannot
+occur with BTH. From [4], we adapt occlusion handling and hallucination on
+uniform/not uniform patches. We also implement alpha-blending, for VSH only
+– as it loses its purpose when acting on the raw streams. For all our methods,
+we inherit the same hyper-parameters from [4]; yet, we discard occluded points
+as the occlusion handling strategy for BTH since an equivalent strategy to deal
+with sparse event histories is not trivial. For VSH on Voxel Grids, we use the
+5-th and 95-th percentile to calculate S−andS+due to the frequent presence of
+extreme values in the stack. For BTH, we perform 12 injections ( i.e.,B= 12).
+Existing fusion methodologies. We compare our proposal with existing
+methods from the RGB stereo literature, consisting of i) modulating the cost
+volume built by the backbone – Guided Stereo Matching [49], ii) concatenating
+the sparse depth values to the inputs to the stereo network – e.g., as done
+by LidarStereoNet [12], iii) a combination of both the previous strategies – inLiDAR-Event Stereo Fusion 9
+DSEC [21] M3ED [9]
+Fig.5: Qualitative comparison – DSEC vs M3ED. DSEC features 640×480
+event cameras and a 16-line LiDAR, M3ED has 1280×720event cameras and a 64-line
+LiDAR. LiDAR scans have been dilated with a 7×7kernel to ease visualization.
+analogy to CCVNorm [69]. Any strategy is adapted to the same common stereo
+backbone [43] (see supplementary material ). Running BTH and VSH adds
+respectively 10ms and 2-15ms (depending on representations) on the CPU.
+Training protocol. Any model we train – either the original event stereo
+backbones or those implementing fusion strategies – runs for 25 epochs with a
+batch size of 4 and a maximum disparity set to 192. We use Adam [29] with beta
+(0.9, 0.999) and weight decay set to 10−4. The learning rate starts at 5·10−4
+and decays with cosine annealing. We apply random crops and vertical flips to
+augment data during training.
+5.2 Evaluation Datasets & Protocol
+We introduce datasets and metrics used in our experiments.
+DSEC [21]. An outdoor event stereo dataset, captured using wide-baseline
+(50 cm) stereo event cameras at 640×480resolution. Ground-truth disparity
+is obtained by accumulating 16-line LiDAR scans, for a total of 26384 maps
+organized into 41 sequences. We split them into train/test sets following [43].
+From the training set, we retain a further searchsplit for hyper-parameters
+tuning and ablation experiments. Sparse LiDAR measurements are obtained by
+aligning the raw scans with the ground-truth – both provided by the authors
+– by running a LiDAR inertial odometry pipeline followed by ICP registration
+(see thesupplementary material for details).
+M3ED [9]. This dataset provides 57 indoor/outdoor scenes collected with
+a compact multi-sensor block mounted on three different vehicles – i.e., a car,
+a UAV, and a quadruped robot. A 64-line LiDAR generates semi-dense ground-
+truth depth, while the event stereo camera has a shorter baseline (12 cm) and
+a higher resolution ( 1280×720). We use 5 sequences from this dataset for eval-
+uation purposes only – some of which contain several frames acquired with the
+cameras being static – to evaluate the generalization capacity of the models both
+to different domains and the density of the LiDAR sensor. Similarly to DSEC,
+we derived sparse LiDAR depth maps from the raw scans. Thanks to the SDK
+made available by the authors, we could derive LiDAR measurements aligned to
+any desired temporal offset according to linear interpolation of the ground-truth
+poses (see the supplementary material for details). This allows us to run ded-10 L. Bartolomei et al.
+Fig.6: Hyperparameters search. Results on DSEC search split. On top, we study
+the impact of (a) patch size, (b) uniform patches, and (c) alpha blending on VSH. At
+the bottom, we consider (d) single vs repeated injection, (e) patch size, (f) uniform
+patches, (g) number of fictitious events, and (h) uniform polarities on BTH.
+icated experiments to assess the effect of time-misaligned depth measurements.
+Fig. 5 shows a qualitative comparison between the two datasets.
+Evaluation Metrics. We compute the percentage of pixels with an error
+greater than 1 or 2 pixels (1PE, 2PE), and the mean absolute error (MAE). We
+highlight the bestandsecond best methods per row on each metric.
+5.3 Ablation Study
+We ran hyper-parameters search and ablation experiments for VSH and BTH on
+theDSECsearchsplit,reportingthe1PEerror.Weconductedtheseexperiments
+using any representation listed in Sec. 3 – except for Concentration [43], which
+starts from pre-computed MDES stacks – and report the average results.
+VSH.Fig. 6 (top) shows the impact of different hyper-parameters on VSH
+strategy. In (a), we can observe how VSH is improved by using 3×3patches,
+while 5×5cannot yield further benefits. Consequently, we select it as the default
+configuration from now on. In (b), we show that uniform patterns are more
+effective than random ones, and in (c) alpha equal to 0.5 works the best.
+BTH.Fig. 6 (bottom) focuses on our second strategy. In (d) we show how
+repeated injection can improve the results; thus, we select it as the default con-
+figuration from now on. In the remainder, we will better appreciate how this
+setting is much more robust when dealing with misaligned LiDAR data. Next,
+(e) outlines how hallucinating events with 3×3patches lead to the best results.
+Applying a uniform patch of events following (f) yields, again, better results.
+In (g), we tested different numbers Kˆx,ˆyof injected fictitious events. Injecting
+more than one event is beneficial, yet saturating with two. Finally, (h) shows
+that using uniform polarities yields lower errors.
+5.4 Experiments on DSEC
+We now report experiments on the DSEC testing split, either when applying
+fusion strategies to pre-trained stereo models without retraining them or when
+training the networks from scratch to exploit LiDAR data.LiDAR-Event Stereo Fusion 11
+Table 1: Results on DSEC [21] – pre-trained. We test the different stacked repre-
+sentations (rows) with several fusion strategies applied to pre-trained stereo backbones.
+Stacked Baseline Guided [49] VSH (ours) BTH (ours)
+representation 1PE 2PE MAE 1PE 2PE MAE 1PE 2PE MAE 1PE 2PE MAE
+(A) Histogram [39] 16.21 4.73 0.74 16.07 4.68 0.73 13.71 4.20 0.6913.32 3.92 0.66
+(B) MDES [43] 15.32 4.40 0.70 15.13 4.34 0.70 12.94 3.52 0.6312.61 3.50 0.62
+(C) Concentration [43] 15.97 4.33 0.70 15.79 4.27 0.70 13.70 3.60 0.6514.66 3.77 0.66
+(D) Voxelgrid [86] 16.49 4.56 0.72 16.29 4.50 0.71 13.12 3.69 0.6512.44 3.60 0.62
+(E) TORE [3] 15.91 4.57 0.71 15.72 4.50 0.71 12.53 3.65 0.6312.27 3.68 0.62
+(F) Time Surface [32] 15.33 4.29 0.70 15.18 4.24 0.69 12.16 3.38 0.6212.28 3.45 0.62
+(G) ERGO-12 [87] 15.02 4.20 0.68 14.87 4.14 0.68 12.02 3.40 0.6111.98 3.42 0.61
+(H) Tencode [26] 14.46 4.17 0.68 14.29 4.11 0.67 12.12 3.37 0.6111.86 3.45 0.61
+Avg. Rank. - 3.00 3.00 3.00 1.751.38 1.50 1.251.63 1.13
+Table 2: Results on DSEC [21] – retrained. We test different stacked represen-
+tations (rows) with several fusion strategies applied during training.
+Concat [12] Guided+Concat [69] Guided [49] VSH (ours) BTH (ours)
+1PE 2PE MAE 1PE 2PE MAE 1PE 2PE MAE 1PE 2PE MAE 1PE 2PE MAE
+(A) 12.57 3.37 0.62 12.81 3.41 0.63 15.57 4.58 0.72 9.903.26 0.5310.91 3.41 0.59
+(B) 12.37 3.17 0.61 12.40 3.25 0.61 14.66 4.36 0.70 9.313.01 0.51 9.623.01 0.54
+(C) 12.38 3.41 0.63 12.74 3.44 0.66 15.15 4.45 0.71 9.703.04 0.53 9.662.98 0.55
+(D) 12.23 3.18 0.60 11.90 3.10 0.60 14.52 4.21 0.68 10.16 3.20 0.56 9.682.90 0.54
+(E) 12.99 3.33 0.62 12.62 3.25 0.61 16.00 4.56 0.73 9.913.05 0.53 9.832.98 0.54
+(F) 12.18 3.09 0.61 12.47 3.17 0.61 14.40 4.21 0.68 9.472.90 0.52 9.582.92 0.54
+(G) 12.43 3.14 0.61 12.82 3.19 0.62 13.85 3.97 0.66 9.252.88 0.50 9.372.87 0.54
+(H) 11.95 3.08 0.60 11.75 3.10 0.60 14.72 4.21 0.69 9.393.00 0.52 9.592.97 0.55
+3.38 3.00 3.13 3.63 3.50 3.38 5.00 5.00 5.00 1.381.88 1.13 1.631.38 1.88
+Pre-trained models. Tab. 1 reports, on each row, the results yielded by
+using a specific stacked representation. In the columns, we report the different
+fusion strategies involved in our experiments, starting with the baseline – i.e.,
+a stereo backbone processing events only. In the last row, we report the average
+ranking – for the three metrics – achieved by any fusion strategy over the eight
+representations. Starting from baseline models, we can notice how the different
+representations have an impact on the accuracy of the stereo backbone, with
+those modeling complex behaviors – e.g., Time Surface [32] or ERGO-12 [87]
+– yielding up to 2% lower 1PE than simpler ones such as Histogram [39]. The
+Guided framework [49] can improve the results only moderately: this is caused
+by the very sparse measurements retrieved from the 16-line LiDAR sensor used
+in DSEC, as well as by the limited effect of the cost volume modulation in
+regions where events are not available for matching. Nonetheless, VSH and BTH
+consistently outperform Guided, always improving the baseline by 2-3% points
+on 1PE. In general, BTH achieves the best 1PE and MAE metrics in most cases;
+this strategy is the best when re-training the stereo backbone is not feasible.
+Training from scratch. Tab. 2 reports the results obtained by training the
+stereobackbonesfromscratchtoperformLiDAR-eventstereofusion.Thisallows
+eitherthedeploymentofstrategiesthatprocesstheLiDARdatadirectlyasinput
+[12,69] or those not requiring it, i.e., [49] and ours. Specifically, Concat [12] and
+Guided+Concat [69] strategy achieve results comparable to those by VSH and
+BTH observed before, thus outperforming Guided [49] which, on the contrary,
+cannot benefit much from the training process. When deploying our solutions
+during training, their effectiveness dramatically increases, often dropping 1PE12 L. Bartolomei et al.
+Table 3: Results on M3ED [9] – pre-trained. We test the different stacked repre-
+sentations (rows) with several fusion strategies applied to pre-trained stereo backbones.
+Stacked Baseline Guided [49] VSH (ours) BTH (ours)
+representation 1PE 2PE MAE 1PE 2PE MAE 1PE 2PE MAE 1PE 2PE MAE
+(A) Histogram [39] 37.70 19.49 1.76 37.18 19.29 1.75 20.19 11.19 1.1922.32 12.37 1.27
+(B) MDES [43] 43.17 19.50 1.85 42.27 19.16 1.83 29.42 14.80 1.5222.58 12.20 1.30
+(C) Concentration [43] 45.78 20.84 1.82 45.06 20.57 1.80 33.63 16.19 1.5325.22 12.68 1.28
+(D) Voxelgrid [86] 37.33 17.66 1.70 36.64 17.38 1.68 20.40 11.41 1.2220.94 11.72 1.23
+(E) TORE [3] 41.70 19.09 1.81 41.00 18.78 1.80 28.25 14.01 1.4721.91 12.34 1.30
+(F) Time Surface [32] 38.58 18.52 1.72 37.91 18.23 1.70 24.89 13.34 1.3722.60 12.77 1.31
+(G) ERGO-12 [87] 36.33 17.81 1.66 35.61 17.50 1.64 22.53 12.33 1.2620.41 11.69 1.21
+(H) Tencode [26] 43.56 20.07 1.82 42.66 19.76 1.80 28.24 14.46 1.4322.61 12.75 1.26
+Avg. Rank. - 3.00 3.00 3.00 1.75 1.75 1.75 1.25 1.25 1.25
+Table 4: Results on M3ED [9] – retrained. We test different stacked representa-
+tions (rows) with several fusion strategies applied during training.
+Concat [12] Guided+Concat [69] Guided [49] VSH (ours) BTH (ours)
+1PE 2PE MAE 1PE 2PE MAE 1PE 2PE MAE 1PE 2PE MAE 1PE 2PE MAE
+(A) 34.67 15.21 1.92 38.65 17.00 1.94 37.45 18.98 1.76 19.34 12.93 1.4619.83 13.20 1.39
+(B) 37.72 16.91 1.85 37.32 17.16 2.14 37.00 18.66 1.76 19.24 13.17 1.4418.70 11.79 1.24
+(C) 39.88 19.01 2.33 38.45 17.76 2.47 38.14 19.62 1.8019.84 13.68 1.90 19.46 12.29 1.35
+(D) 33.89 16.21 1.89 33.54 15.85 1.75 37.85 18.81 1.7418.56 11.76 1.3221.02 14.30 1.80
+(E) 38.83 18.38 2.27 35.80 16.63 2.05 40.51 19.96 1.95 20.03 13.97 1.8620.04 12.65 1.39
+(F) 40.26 18.44 2.19 35.48 17.74 2.15 38.77 18.41 1.75 19.61 13.01 1.5521.91 14.33 1.72
+(G) 42.43 19.31 2.31 42.24 18.42 2.34 37.95 17.83 1.76 18.45 12.31 1.5519.12 11.60 1.24
+(H) 37.46 17.87 2.15 33.69 16.47 1.95 39.78 19.42 1.82 19.49 12.21 1.3819.28 11.68 1.33
+4.38 4.00 4.50 3.63 3.38 4.38 4.00 4.63 2.75 1.38 1.63 1.88 1.63 1.38 1.50
+error below 10%. VSH often yields the best 1PE and MAE overall, nominating
+it as the most effective – yet intrusive – among our solutions.
+5.5 Experiments on M3ED
+We test the effectiveness of BTH and alternative approaches on M3ED, using
+the backbones trained on DSEC without any fine-tuning on M3ED itself.
+Pre-trained models. Tab. 3 collects the outcome of this experiment by ap-
+plying Guided, VSH, and BTH to pre-trained models. Looking at the baselines,
+we can appreciate how M3ED is very challenging for models trained in a different
+domain, with 1PE errors higher than 30%. This is caused by both the domain
+shift and the higher resolution of the event cameras used. Even so, complex event
+representations – e.g., ERGO-12 [87] – can better generalize. Guided confirms
+its limited impact, this time mainly because of the ineffectiveness of the cost
+volume modulation in the absence of any information from the events domain.
+On the contrary, we can appreciate even further the impact of VSH and BTH,
+almost halving the 1PE error. Specifically, BTH is the absolute winner with 6
+out of 8 representations, and the best choice for pre-trained frameworks.
+Training from scratch. Tab. 4 resumes the results obtained when train-
+ing on DSEC the backbones implementing LiDAR-event stereo fusion strategies.
+The very different distribution of depth points observed across the two datasets
+– sourced respectively from 16 and 64-line LiDARs – yields mixed results for
+existing methods [12,49,69], with rare cases for which they fail to improve
+the baseline model (e.g., Concat and Guided with Time Surface and ERGO-LiDAR-Event Stereo Fusion 13
+Events & LiDAR Baseline Guided [49] BTH (ours) BTH (ours, retrain)
+1PE: 50.84%
+ 1PE: 48.94%
+ 1PE: 32.16%
+ 1PE: 22.83%
+Events & LiDAR Baseline Guided [49] VSH (ours) BTH (ours)
+1PE: 53.19%
+ 1PE: 50.26%
+ 1PE: 10.94%
+ 1PE: 13.50%
+Fig.7: Qualitative results. Results on DSEC zurich_10_b with Voxelgrid [86] (top)
+and M3ED spot_indoor_obstacles with Histogram [39] (bottom).
+12, Guided+Concat with Histogram). On the contrary, backbones trained with
+VSH and BTH consistently improve over the baseline, often with larger gains
+compared to their use with pre-trained models. Overall, BTH is the best on
+2PE and MAE, confirming it is better suited for robustness across domains and
+different LiDAR sensors.
+Fig. 7 shows qualitative results. On DSEC (top), BTH dramatically improves
+results over the baseline and Guided, yet cannot fully recover some details in the
+scene except when retraining the stereo backbone. On M3ED (bottom), both
+VSH and BTH with pre-trained models reduce the error by 5 ×.
+5.6 Experiments on M3ED – Time-misaligned LiDAR
+We conclude by assessing the robustness of the considered strategies against the
+use of LiDAR not synchronized with the timestamp at which we wish to estimate
+disparity – occurring if we wish to maintain the microsecond resolution of the
+event cameras. Purposely, we extract raw LiDAR measurements collected 3, 13,
+32, 61, and 100 ms in the past with the M3ED SDK.
+Fig. 8 shows the trend of the 1PE metric achieved by Guided (red), VSH
+(yellow) and BTH (black and green) on pre-trained backbones. Not surprisingly,
+the error rates arise at the increase of the temporal distance: while this is less
+evident with Guided because of its limited impact, this becomes clear with VSH
+andBTH.Nonetheless,bothcanalwaysretainasignificantgainoverthebaseline
+model (blue) – i.e., the stereo backbone processing events only – even with the
+farthest possible misalignment with a 10Hz LiDAR (100ms). We can appreciate
+how BTH is often better than VSH (coherently with Tab. 3), yet only when
+repeatedinjectionsareperformed(green).Indeed,usingasingleinjection(black)14 L. Bartolomei et al.
+Fig.8: Experiments with time-misaligned LiDAR on M3ED [9] – pre-
+trained. We measure the robustness of different fusion strategies against the use of
+out-of-sync LiDAR data, without retraining the stereo backbone.
+Fig.9: Experiments with time-misaligned LiDAR on M3ED [9] – retrained.
+We measure the robustness of different fusion strategies against the use of out-of-sync
+LiDAR data when training the stereo backbone from scratch.
+rapidlyleadsBTHtoanaccuracydropwhenincreasingthemisalignment,except
+when using Histogram representation. Overall, BTH with ERGO-12 is the most
+robust solution. Fig. 9 shows the results achieved by VSH (yellow) and BTH
+(green) after retraining, against the best competitor according to average ranks
+in Tab. 4 – i.e., Guided+Concat (red). The impact of this latter is limited and
+sometimes fails to improve the baseline (see Histogram and ERGO-12). On the
+contrary, our solutions confirm their robustness and effectiveness even when
+dealing with time-misaligned LiDAR data.

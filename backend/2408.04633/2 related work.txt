@@ -1,0 +1,90 @@
+2 Related Work
+Stereo Matching on color images. It is a longstanding open problem, with
+a large body of literature spanning from traditional approaches grounded on
+handcrafted features and priors [5,24,31,36,62,68,75,76,78] to contemporary
+deep learning approaches that brought significant improvements over previous
+methods,startingwith[79].Nowadays,themosteffectivesolutionshaveemerged
+as end-to-end deep stereo networks [51], replacing the whole stereo pipeline with
+adeepneuralnetworkarchitecturethrough2Dand3Darchitectures.Theformer,
+inspiredbytheU-Netmodel[53],adoptsanencoder-decoderdesign[37,42,45,50,
+54,59,63,64,74,77]. In contrast, the latter constructs a feature cost volume from
+image pair features and estimates the disparity map through 3D convolutions at
+the cost of substantially higher memory and runtime demands [10,11,13,16,23,
+27,28,57,70,73,80]. A recent trend in this field [34,38,65,71,83,84] introduced
+innovative deep stereo networks that embrace an iterative refinement paradigm
+or use Vision Transformers [22,35].
+Stereo Matching with event cameras. This topic attracted significant
+attention due to the unique advantages of event sensors over traditional frame-
+based cameras. Similarly to conventional stereo matching, the first approaches
+focused on developing traditional algorithms by building structured represen-
+tations, such as voxel grids [56], matched through handcrafted similarity func-
+tions [30,56,60,85]. However, pseudo-images lose the high temporal resolution
+of the stream: to face this problem, [8,52] handle events without an intermedi-
+ate representation using an event-to-event matching approach, where for each
+reference event, a set of possible matches is given. Camuñas-Mesa et al. [7]4 L. Bartolomei et al.
+Fig.2: Event cameras vs LiDARs – strengths and weaknesses. Event cameras
+provide rich cues at object boundaries where LiDARs cannot (cyan), yet LiDARs can
+measure depth where the lack of texture makes event cameras uninformative (green).
+add filters to exploit orientation cues and increase matching distinctiveness. In-
+stead, [47] revisited the cooperative network from [41]. Neural networks also
+showed promising results on event stereo matching with models directly pro-
+cessing raw events or using structured representation. The former are often in-
+spired by [41] and typically employ Spiking Neural Networks (SNN) [1,15,44].
+The latter adopts data-driven Convolutional Neural Networks (CNNs) to infer
+dense depth maps [43,66,67]. A detailed review of different event-based stereo
+techniques can be found in [17].
+Sensor fusion for stereo. Recent research has delved into the fusion of
+color-cameras stereo vision with active sensors, starting with handcrafted algo-
+rithms: Badino et al. [2] integrated LiDAR data directly into the stereo algo-
+rithm using dynamic programming, Gandhi et al. [19] proposed an efficient seed-
+growingalgorithmtofusetime-of-flight(ToF)depthdatawithstereopairs,while
+Marin et al. [40] and Poggi et al. [48] exploited confidence measures. Eventu-
+ally, contemporary approaches integrated depth from sensors with modern stereo
+networks, either by concatenating them to images as input [12,46,69,81] or by
+using them to guide the cost optimization process by modulating existing cost
+volumes [25,49,69,82]. More recently, Bartolomei et al. [4] followed a different
+pathwithVirtualPatternProjection(VPP).AlthoughLiDARsensorsandevent
+camerashavebeendeployedtogetherforsomeapplications[6,14,20,33,55,58,61],
+this paper represents the first attempt at combining LiDAR with an event stereo
+framework. We argue that the two modalities are complementary, as shown in
+Fig. 2 – e.g., the lack of texture and motion makes an event camera uninforma-
+tive, whereas this does not affect LiDAR systems.
+3 Preliminaries: Event-based Deep Stereo
+Event cameras measure brightness changes as an asynchronous stream of events.
+Accordingly, an event ek= (xk, yk, pk, tk)is triggered at time tkif the intensity
+sensed by pixel (xk, yk)on the W ×H sensor grid changes and surpasses a specific
+contrast threshold. Depending on the sign of this change, it will have polarity
+pk∈ {− 1,1}. Since this unstructured flow is not suitable for standard CNNs – as
+those proposed in the classical stereo literature [51] – converting it into W ×H×C
+structured representations is necessary if we are interested in obtaining a dense
+disparitymap[21].Purposely,givenatimestamp tdatwhichwewanttoestimateLiDAR-Event Stereo Fusion 5
+a disparity map, events are sampled backward in time from the stream, either
+based on a time interval (SBT) or a maximum number of events (SBN), and
+stackedaccording to various strategies – among them:
+Histogram [39]. Events of the two polarities are counted into per-pixel his-
+tograms, yielding a W ×H×2 stack.
+Voxel grid [86]. The timelapse from which events are sampled is split into
+Buniform bins: polarities are accumulated in each bin of a W ×H×B stack.
+Mixed-DensityEventStack(MDES) [43].Similartothevoxelgridstrat-
+egy, the timelapse is split into bins covering 1,1
+2,1
+4, ...,1
+2N−2,1
+2N−1of the total
+interval. The latest event in each bin is kept, yielding a W ×H×N binary stack.
+Concentrated stack [43]. A shallow CNN is trained to process a pre-
+computed stack ( e.g., an MDES) and aggregate it to a W ×H×1 data structure.
+Time-Ordered Recent Event (TORE) [3]. It stores event timestamps
+into Q per-pixel queues for each polarity, yielding a W ×H×2Q stack.
+Time Surface [32]. A surface is derived from the timestamp distributions
+of the two polarities. S values are sampled for each, yielding a W ×H×2S stack.
+ERGO-12 [87]. An optimized representation of 12 channels, each built ac-
+cording to different strategies from the previous. It yields a W ×H×12 stack.
+Tencode [26]. A color image representation in which R and B channels
+encode positive and negative polarities, with G encoding the timestamp relative
+to the total timelapse. It produces an RGB image, i.e. a W×H×3 stack.
+We can broadly classify stereo frameworks using these representations into
+three categories: i) white boxes , for which we have full access to the implemen-
+tation of both the stereo backbone and the stacked event construction; ii) gray
+boxes, in case we do not have access to the stereo backbone; iii) black boxes , when
+the stacked event representation is not accessible neither.

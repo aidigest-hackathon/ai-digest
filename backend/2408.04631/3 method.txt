@@ -1,0 +1,217 @@
+3 Method
+Given a single image yof an object and one or more drags D={dk}K
+k=1, our goal is to synthesize a
+videoX={xi}N
+i=1sampled from the distribution
+X∼ P(x1, x2, . . . , x N|y,D) (1)
+where Nis the number of video frames. The distribution Pshould reflect physics and generate a
+part-level animation of the object that responds to the drags. To learn it, we capitalize on a pre-trained
+video generator, i.e., Stable Video Diffusion (SVD, Section 3.1) [ 20]. Such video generators are
+expected to acquire an implicit, general-purpose understanding of motion through their pre-training
+3Conv BlockAll-to-FirstSpatial Attn.Temporal Attn.Conv BlockAll-to-First Spatial Attn.Temporal Attn.
+CLIP
+𝑑!𝑑"MLPX-Attn.Tokens
+Conv &Modulate⋯
+𝑄𝐾𝑉attend
+×𝑆
+,MLPConditioning(𝑦,𝒟)𝑦
+X-Attn.X-Attn.X-Attn.Conv &Modulate
+Drag Tokens(A)
+(B)(C)Figure 2: Architectural Overview of Puppet-Master . To enable precise drag conditioning, we first
+modify the original latent video diffusion architecture (Section 3.1) by ( A) adding adaptive layer
+normalization modules to modulate the internal diffusion features and ( B) adding cross attention
+with drag tokens (Section 3.2). Furthermore, to ensure high-quality appearance and background, we
+introduce ( C)all-to-first spatial attention, a drop-in replacement for the spatial self-attention modules,
+which attends every noised video frame with the first frame (Section 3.3).
+on Internet videos. This prior is particularly important to us, since we require data representative of
+part-level motions for our purposes, which are relatively scarce comparing to Internet videos.
+In this section, we show how to tame the pre-trained video generator for part-level motion control.
+There are two main challenges. First, the drag conditioning must be injected into the video generation
+pipeline to facilitate efficient learning and accurate and time-consistent motion control while avoiding
+too much modifying the pre-trained video generator’s internal representation. Second, naïvely fine-
+tuning a pre-trained video diffusion model can result in artifacts such as cluttered backgrounds [ 39].
+To address these challenges, in Section 3.2, we first introduce a novel mechanism to inject the drag
+condition Din the video diffusion model. Then, in Section 3.3, we improve the video generation
+quality by introducing all-to-first attention mechanism, which reduces artifacts like the background
+clutter. Note that while we build on SVD, these techniques should be easily portable to other video
+generators based on diffusion.
+3.1 Preliminaries: Stable Video Diffusion
+SVD is an image-conditioned video generator based on diffusion, implementing a denoising process
+in latent space. This utilizes a variational autoencoder (V AE) (E, D), where the encoder Emaps
+the video frames to the latent space, and the decoder Dreconstructs the video from the latent codes.
+During training, given a pair (X=x1:N, y)formed by a video and the corresponding image prompt,
+one first obtains the latent code as z1:N
+0=E(x1:N), and then adds to the latter Gaussian noise
+ϵ∼N(0,I), obtaining the progressively more noised codes
+z1:N
+t=√¯αtz1:N
+0+√
+1−¯αtϵ1:N, t= 1, . . . , T. (2)
+This uses a pre-defined noising schedule ¯α0= 1, . . . , ¯αT= 0. The denoising network ϵθis trained
+to reverse this noising process by optimizing the objective function:
+min
+θE(x1:N,y),t,ϵ1:N∼N(0,I)
+∥ϵ1:N−ϵθ(z1:N
+t, t, y)∥2
+2
+. (3)
+Here, ϵθuses the same U-Net architecture of VideoLDM [ 30], inserting temporal convolution and
+temporal attention modules after the spatial modules used in Stable Diffusion [ 27]. The image
+conditioning is achieved via (1) cross attention with the CLIP [ 50] embedding of the reference frame
+y; and (2) concatenating the encoded reference image E(y)channel-wise to z1:N
+tas the input of the
+network. After ϵθis trained, the model generates a video ˆXprompted by yvia iterative denoising
+from pure Gaussian noise z1:N
+T∼ N(0,I), followed by V AE decoding ˆX= ˆx1:N=D(z1:N
+0).
+43.2 Adding Drag Control to Video Diffusion Models
+Next, we show how to add the drags Das an additional input to the denoiser ϵθfor motion control.
+We do so by introducing an encoding function for the drags Dand by extending the SVD architecture
+to inject the resulting code into the network. The model is then fine-tuned using videos combined
+with corresponding drag prompts in the form of training triplets (X, y,D). We summarize the key
+components of the model below and refer the reader to Appendix A for more details.
+Drag encoding. LetΩbe the spatial grid {1, . . . , H }×{1, . . . , W }where H×Wis the resolution
+of a video. A drag dkis a tuple (uk, v1:N
+k)specifying that the drag starts at location uk∈Ωin
+the reference image yand lands at locations vn
+k∈Ωin subsequent frames. To encode a set of
+K≤Kmax= 5dragsD={dk}K
+k=1we use the multi-resolution encoding of [ 4]. Each drag dk1,
+is input to a hand-crafted encoding function enc(·, s) : ΩN7→RN×s×s×c, where sis the desired
+encoding resolution. The encoding function captures the state of the drag in each frame; specifically,
+each slice enc(dk, s)[n]encodes (1) the drag’s starting location ukin the reference image, (2) its
+intermediate location vn
+kin the n-th frame, and (3) its final location vN
+kin the final frame. The
+s×smapenc(dk, s)[n]is filled with values −1except in correspondence of the 3locations, where
+we store uk,vn
+kandvN
+krespectively, utilizing c= 6 channels. Finally, we obtain the encoding
+Ds
+enc∈RN×s×s×cKmaxofDby concatenating the encodings of the Kindividual drags, filling extra
+channels with value −1ifK < K max. The encoding function is further detailed in Appendix A.
+Drag modulation. The SVD denoiser comprises a sequence of U-Net blocks operating at different
+resolutions s. We inject the drag encoding Ds
+encin each block, matching the block’s resolution s. We
+do so via modulation using an adaptive normalization layer [21, 51–56]. Namely,
+fs←fs⊗(1+γs) +βs, (4)
+where fs∈RB×N×s×s×Cis the U-Net features of resolution s, and⊗denotes element-wise
+multiplication. γs, βs∈RB×N×s×s×Care the scale andshift terms regressed from the drag
+encoding Ds
+enc. We use convolutional layers to embed Ds
+encfrom the dimension cKmaxto the target
+dimension C. We empirically find that this mechanism provides better conditioning than using only a
+single shift term with noscaling as in [4].
+Drag tokens. In addition to conditioning the network via drag modulation, we also do so via cross-
+attention by exploiting SVD’s cross-attention modules. These modules attend a single key-value
+obtained from the CLIP [ 50] encoding of the reference image y. Thus, they degenerate to a global
+bias term with nospatial awareness [ 57]. In contrast, we concatenate to the CLIP token additional
+drag tokens so that cross-attention is non-trivial. We use multi-layer perceptrons (MLPs) to regress
+an additional key-value pair from each dragdk. The MLPs take the origin ukand terminations vn
+k
+andvN
+kofdkalong with the internal diffusion features sampled at these locations, which are shown
+to contain semantic information [ 58], as inputs. Overall, the cross-attention modules have 1 +Kmax
+key-value pairs ( 1is the original image CLIP embedding), with extra pairs set to 0ifK < K max.
+3.3 Attention with the Reference Image Comes to Rescue
+In preliminary experiments utilizing the Drag-a-Move [ 4] dataset, we noted that the generated videos
+tend to have cluttered/gray backgrounds. Instant3D [ 39] reported a similar problem when generating
+multiple views of a 3D object, which they addressed via careful noise initialization. VideoMV [ 59]
+and Vivid-ZOO [ 60] directly constructed training videos with a gray background, which might help
+them offset a similar problem.
+The culprit is that SVD, which was trained on 576×320videos, fails to generalize to very different
+resolutions. Indeed, when prompted by a 256×256image, SVD cannot generate reasonable videos.
+As a consequence, fine-tuning SVD on 256×256videos (as we do for Puppet-Master) is prone to
+local optima, yielding sub-optimal appearance details. Importantly, we noticed that the first frame
+of each generated video is spared from the appearance degradation (Fig. 6), as the model learns to
+directly copy the reference image. Inspired by this, we propose to create a “shortcut” from each
+noised frame to the first frame with all-to-first spatial attention, which significantly mitigates, if not
+completely resolves, the problem.
+1With a slight abuse of notation, we assume dk∈ΩN, asuk=v1
+kand hence v1:N
+k∈ΩNfully describes dk.
+5All Objaverse Animated Assets (40k)Objaverse-Animation (16k)Objaverse-AnimationHQ (10k)
+Feature extractionRandom forest classificationRenderingGPT-4V prompting & queryingTraining Data
+Drastic ChangeStatic
+Global Change Only
+Sudden Appearance Change
+UnrealisticAnimation
+⋯
+⋯
+⋯Figure 3: Data Curation . We propose two strategies to filter the animated assets in Objaverse,
+resulting in Objaverse-Animation ( 16k) and Objaverse-Animation-HQ ( 10k) of varying levels of
+curation, from which we construct the training data of Puppet-Master by sampling sparse motion
+trajectories and projecting them to 2D as drags.
+All-to-first spatial attention. Previous works [ 61–63] have shown that attention between the noised
+branch and the reference branch improves the generation quality of image editing and novel view
+synthesis tasks. Here, we design an all-to-first spatial attention that enables each noised frame to
+attend to the first (reference) frame. Inspired by [ 63], we implement this attention by having each
+frame query the key and value of the first frame in all self-attention layers within the denoising U-Net.
+More specifically, denoting the query, key, and value tensors as Q, K andV∈RB×N×s×s×C, we
+discard the key and value tensors of non-first frames, i.e.,K[:,1:]andV[:,1:], and compute the
+spatial attention Aiof the i-th frame as follows:
+Ai= softmax 
+flat (Q[:,i]) flat ( K[:,0])T
+√
+D!
+flat (V[:,0]), (5)
+where flat(·) :RB×s×s×C7→RB×L×Cflattens the spatial dimensions to get L=s×stokens for
+attention. The benefit is two-fold: first, this “shortcut” to the first frame allows each non-first frame
+to directly access non-degraded appearance details of the reference image, effectively alleviating
+local minima during optimization. Second, combined with the proposed drag encoding (Section 3.2),
+which specifies, for every frame, the origin ukat the first frame, all-to-first attention enables the latent
+pixel containing the drag termination ( i.e.,vn
+k) to more easily attend to the latent pixel containing the
+drag origin on the first frame, potentially facilitating learning.
+4 Curating Data to Learn Part-Level Object Motion
+To train our model we require a video dataset that captures the motion of objects at the level of parts.
+Creating such a dataset in the real world means capturing a large number of videos of moving objects
+while controlling for camera and background motion. This is difficult to do for many categories ( e.g.,
+animals) and unfeasible at scale. DragAPart [ 4] proposed to use instead renderings of synthetic 3D
+objects, and their corresponding part annotations, obtained from GAPartNet [ 64]. Unfortunately,
+this dataset still requires to manually annotate and animate 3D object parts semi-manually, which
+limits its scale. We instead turn to Objaverse [ 22], a large-scale 3D dataset of 800k models created by
+3D artists, among which about 40k are animated. In this section, we introduce a pipeline to extract
+suitable training videos from these animated 3D assets, together with corresponding drags D.
+Identifying animations. While Objaverse [ 22] has more than 40k assets labeled as animated, not all
+animations are useful for our purposes (Fig. 3). Notably, some are “fake”, with the objects remaining
+static throughout the sequence, while others feature drastic changes in the objects’ positions or even
+6their appearances. Therefore, our initial step is to filter out these unsuitable animations. To do so, we
+extract a sequence of aligned point clouds from each animated model and calculate several metrics
+for each sequence, including: (1) the dimensions and location of the bounding box encompassing the
+entire motion clip, (2) the size of the largest bounding box for the point cloud at any single timestamp
+and (3) the mean and maximal total displacement of all points throughout the sequence. Using these
+metrics, we fit a random forest classifier, which decides whether an animation should be included
+in the training videos or not, on a subset of Objaverse animations where the decision is manually
+labeled. The filtering excludes many assets that exhibit imperceptibly little or over-dramatic motions
+and results in a subset of 16k animations, which we dub Objaverse-Animation.
+Further investigation reveals that this subset still contains assets whose motions are artificially
+conceived and therefore do not accurately mimic real-world dynamics (Fig. 3). To avoid such
+imaginary dynamics leaking into our synthesized videos, we employ the multi-modal understanding
+capability of GPT-4V [ 65] to assess the realism of each motion clip. Specifically, for each animated 3D
+asset in Objaverse-Animation, we fix the camera at the front view and render 4images at timestamps
+corresponding to the 4quarters of the animation and prompt GPT-4V to determine if the motion
+depicted is sufficiently realistic to qualify for the training videos. This filtering mechanism excludes
+another 6k animations, yielding a subset of 10k animations which we dub Objaverse-Animation-HQ.
+Sampling drags. The goal of drag sampling is to produce a sparse set of drags D={dk}K
+k=1
+where each drag dk:= (uk, v1:N
+k)tracks a point ukon the asset in pixel coordinates throughout
+theNframes of rendered videos. To encourage the video generator to learn a meaningful motion
+prior, ideally, the set should be both minimal andsufficient : each group of independently moving
+parts should have oneandonly one drag corresponding to its motion trajectory, similar to Drag-a-
+Move [ 4]. For instance, there should be separate drags for different drawers of the same furniture,
+as their motions are independent, but not for a drawer and its handle, as in this case, the motion of
+oneimplies that of the other. However, Objaverse [ 22] lacks the part-level annotation to enforce
+this property. To partially overcome this, we find that some Objaverse assets are constructed in
+a bottom-up manner, consisting of multiple sub-models that align well with semantic parts. For
+these assets, we sample 1drag per sub-model; for the rest, we sample a random number of drags
+in total. For each drag, we first sample a 3D point on the visible part of the model (or sub-model)
+with probabilities proportional to the point’s total displacement across Nframes and then project
+its ground-truth motion trajectory p1, . . . , p N∈R3to pixel space to obtain dk. Once all Kdrags
+are sampled, we apply a post-processing procedure to ensure that each pair of drags is sufficiently
+distinct, i.e., fori̸=j, we randomly remove one of dianddjif∥v1:N
+i−v1:N
+j∥2
+2≤δwhere δis a
+threshold we empirically set to 20Nfor256×256renderings.

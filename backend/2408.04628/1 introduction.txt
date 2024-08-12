@@ -1,0 +1,301 @@
+1 Introduction
+The application of computational techniques to the
+study of ancient language artifacts has yielded ex-
+citing results that would have been difficult to un-
+cover with manual analysis alone (Assael et al.,
+2022). Unsurprisingly, one of the biggest chal-
+lenges in this domain is data scarcity, which, in
+turn, means that transferring from pre-trained sys-
+tems on well-resourced languages is paramount.
+However, it is more challenging to adopt similar
+techniques for ancient logographic writing systems,
+Translation
+     ? ? ? ? ? ? ?OCRUnicodeLatinPhotoHandcopyVisualTextualInputOutput
+?弃慮???Parse TreeDating…MConventionalVisual (novel)?Figure 1: Illustration of the processing flow of Old
+Chinese (in Bamboo Script), an ancient logographic
+language, best viewed in color. M denotes the pre-
+trained model used in the pipeline. Vision-based models
+directly process visual representations (violet; dashed
+lines). Conventional NLP pipelines (blue; solid lines)
+first convert visual representations into symbolic text—
+either automatically, which is quite noisy, or manually,
+which is labor-intensive. However, as shown, some
+ancient logographic writing systems have symbol in-
+ventories that have not yet been fully mapped into Uni-
+code. Even when Unicode codepoints exist, they are
+often mutually exclusive with the symbol inventories of
+high-resource languages, reducing the effectiveness of
+transferring from pre-trained models. Finally, latiniza-
+tion(a potential solution for finding common ground
+with pre-training languages) loses information from the
+original input, is not fully standardized, and is difficult
+to automate.
+in which individual symbols represent entire se-
+mantic units like morphemes or words.
+The challenges associated with NLP for ancient
+logographic languages mainly come from two as-
+pects. First, for many ancient languages, most
+available data sources are in visual forms, consist-
+ing of untranscribed photographs or hand-drawn
+copies (i.e., lineart ). Adopting the conventional
+NLP pipeline, which requires converting visual
+representations into symbolic text, is therefore not
+straightforward: automatic transcriptions are often
+noisy due to data scarcity, while manual transcrip-
+tions are labor-intensive and require domain exper-
+tise. Some logographic writing systems, such asarXiv:2408.04628v1  [cs.CL]  8 Aug 2024Old Chinese, even include symbol inventories that
+remain not fully mapped to Unicode (depicted in
+Figure 1).
+Second, even when perfect Unicode transcrip-
+tions are available, their symbol inventories are of-
+ten mutually exclusive with those of high-resource
+languages, which can substantially reduce the effec-
+tiveness of transfer from pre-trained multilingual
+encoders, such as mBERT (Devlin et al., 2018).
+One processing step that might be used to mitigate
+this issue is latinization of the Unicode transcripts
+(Rust et al., 2021; Muller et al., 2020). However,
+it is challenging to Latinize logographic languages
+due to uncertain pronunciations (Sproat and Gutkin,
+2021) and the resulting inconsistent latinization
+schemes across artifacts from the same language
+and writing system. Such a process is laborious—
+humanists may devote months or even years to de-
+termine the correct transliteration. In contrast, once
+a correct transliteration is determined, translation
+into another language may only take minutes.
+Fortunately, advances in visual encoding strate-
+gies for NLP tasks offer an alternative solution.
+Recent studies have investigated NLP systems
+that model text in the pixel space (Rust et al.,
+2023; Tschannen et al., 2023; Salesky et al., 2023),
+thereby opening new possibilities for the direct use
+of visual representations of ancient logographic
+writing systems. These approaches, to date, have
+primarily been applied to digitally rendered texts.
+They have not yet been extensively evaluated on
+handwritten texts, such as lineart , i.e., neatly hand-
+copied versions of texts by scholars.
+In this paper, we attempt to answer the following
+questions: (1) Can we effectively apply NLP toolk-
+its, such as classifiers, machine translation systems,
+and syntactic parsers, to visual representations of
+logographic writing systems? (2) Does this strategy
+allow for better transfer from pre-trained models
+and lead to better performance? Additionally, as
+shown in Figure 1, many logographic languages
+have multiple partially processed representations,
+including artifact photographs, hand-copied lineart,
+Unicode, Latin transliteration, and normalization—
+we also aim to empirically investigate the extent to
+which various representations at each stage, includ-
+ing textual and visual modalities, facilitate effective
+fine-tuning of downstream NLP systems.
+We have curated LogogramNLP , a benchmark
+consisting of four representative ancient logo-
+graphic writing systems (Linear A, Egyptian hiero-glyphic, Cuneiform, and Bamboo Script), along
+with annotations for fine-tuning and evaluating
+downstream NLP systems on three tasks, including
+three attribute classification tasks, machine transla-
+tion, and dependency parsing.
+We conduct experiments on these languages and
+tasks with a suite of popular textual and visual
+encoding strategies. Surprisingly, visual repre-
+sentations perform better than conventional text
+representations for some tasks (including machine
+translation), likely due to visual encoding allowing
+for better transfer from cross-lingual pre-training.
+These results highlight the potential of visual rep-
+resentation processing, a novel approach to ancient
+language processing, which can be directly applied
+to a larger portion of existing data.
+2 Dataset: Languages, Tasks and
+Challenges
+Our benchmark consists of four representative an-
+cient languages—Linear A, Egyptian hieroglyphic,
+Cuneiform, and Bamboo script (§2.1).1Each lan-
+guage is associated with a unique writing system
+and unique challenges. We refer the readers to
+Appendix A for data collection and cleaning de-
+tails. Our benchmark covers three tasks: machine
+translation, dependency parsing, and attribute clas-
+sification (§2.2).
+2.1 Logographic Languages
+A major characteristic of logographic languages is
+that the size of symbol inventories is significantly
+larger than that in alphabetic languages such as
+Ancient Greek (24 letters) or Modern English (26
+letters). A summary of different representations of
+the languages of our interest is shown in Figure 2,
+and Table 2 summarizes the current status of each
+language.
+Linear A. Linear A is an undeciphered language
+used by the Minoan at Crete and is believed to
+be not related to ancient Greek. Scholars have
+differentiated the glyphs and carefully hand-copied
+them into linearts. We collected a dataset of 772
+tablets (i.e., manually drawing) from SigLA.2Each
+tablet also has a separable glyph with annotated
+Unicode.
+1Bamboo scripts usually combine Seal scripts and Clerical
+scripts.
+2https://sigla.phis.me/browse.htmlWriting system Language abbr.Visual Feature Textual Feature Task
+Full Doc Textline Unicode latinization Translation UD Parsing Attribute
+Linear A Unknown LNA Y Y Y Y
+Egyptian hieroglyph Ancient Egyptian EGY Y Y Y Y
+Cuneiform Akkadian & Sumerian AKK Y Y Y Y Y∗Y
+Bamboo script Ancient Chinese ZHO Y Y Y Y∗Y∗
+Table 1: A summary of the task availability across four ancient languages with unique writing systems. The
+underlined Yindicates that the data has not previously been used in a machine learning setup, which demonstrates
+the novelty of our benchmark; and asterisks (∗) indicate that we conducted extra manual labeling.
+PhotographImage Textline 
+labor-intensity: 
+!
+!
+!
+expertise level: 
+⭐
+⭐
+ Unicode
+!"#$%%&'O(絕)-智(知)-棄-O(辩)Latinization_igi_ ka-bi-sum2sDm=f hnw m r n tA-wr hAkr grH n sDr.tCuneifromEgyptian HeiroglyphBamboo ScriptLinear A
+labor-intensity: 
+!
+ expertise level: 
+⭐
+⭐
+⭐
+labor-intensity: 
+!
+ expertise level: 
+⭐
+TranslationParse TreeDating…
+! #   $ !"#N/Aqe ra2 u ki ro *79 su Not within our proposed dataset
+Figure 2: Example of four logographic languages with different representation formats. The arrow shows the typical
+processing flow of ancient languages by humanists. The workload and expertise required to transcribe the text from
+images is even greater than that of downstream tasks such as machine translation. The red circle O (in Bamboo
+Script) indicates the character is not digitized as Unicode yet. Green dashed boxes note that Unicode exists for
+Egyptian hieroglyphics and Linear A, but the alignment to documents is unavailable; the same goes for Egyptian
+and Linear A photographs.
+status LNA AKK EGY ZHO GRC
+deciphered None Most Most Most All
+differentiated Most Most Most Most All
+encoded Most Most Some Some All
+Latinized All All All None All
+Table 2: Summary of the status of the ancient logo-
+graphic languages presented in our paper. The status
+is measured from the perspective of paleography. We
+put Ancient Greek (GRC), a well-known ancient non-
+logographic language, here for comparison.
+Akkadian (Cuneiform). CuneiML (Chen et al.,
+2023) is a dataset that contains 36k entries of
+cuneiform tablets. Each tablet consists of Unicode
+Cuneiform, lineart, and transliteration. We also
+use the Akkadian Universal Dependencies (UD)
+dataset (Luukko et al., 2020), which contains 1,845
+sentences with dependency annotations. Since the
+UD annotation of Akkadian only keeps the normal-
+ization form of the language, we obtain the Uni-
+code by running a dynamic programming-based
+matching algorithm.
+Ancient Egyptian (Hieroglyph). We segmented
+the St Andrews Corpus (Nederhof and Berti,2015)3using a rule-based segmenter, and obtained
+891 examples of parallel data. Additionally, we col-
+lected data from the Thot Sign List (TSL; English
+translation)4and BBAW (German translation)5for
+2,337 and 100,736 samples of parallel data, respec-
+tively. However, the transliteration standards differ
+among these three sources of data, and BBAW does
+not include hieroglyph image features. Therefore,
+we only used TSL’s data.
+Old Chinese (Bamboo script). We collected
+13,770 pieces of bamboo slips from Kaom,6which
+come with the photograph of each line of the text.
+The Baoshan collection covers three genres: Wen-
+shu (Document), Zhanbu (Divine), and Book. The
+Guodian collection contains parallel data translated
+into modern Chinese. The vocabulary size is 1,303.
+Notably, about 40% of the characters do not have a
+Unicode codepoint and are, therefore, represented
+as place-holder triangles or circles. This dataset
+3https://mjn.host.cs.st-andrews.ac.uk/
+egyptian/texts/corpus/pdf/
+4https://thotsignlist.org/
+5https://aaew.bbaw.de/tla/servlet/
+TlaLogin
+6http://www.kaom.netdoes not come with human-labeled latinization due
+to the lack of transliteration standards.
+2.1.1 Visual Representations
+Since ancient scripts did not consistently adhere to
+a left-to-right writing order, breaking down multi-
+line documents into images of single-line text is
+nontrivial. These historical data, therefore, need
+additional processing to be machine-readable. Fig-
+ure 3 shows examples of different processing strate-
+gies. We summarize the approaches we used in
+building the dataset as follows:
+1.Raw image (no processing) : the raw images
+are already manually labeled and cut into text
+lines of images, and no extra processing is re-
+quired.
+2.Montage : we generate a row of thumbnails of
+each glyph using the montage tool in ImageMag-
+ick.7This strategy is used for Linear A, as the
+original texts are written on a stone tablet, and
+scholars have not determined the reading order-
+ing of this unknown script.
+3.Digital rendering : we digitally render the text
+using computer fonts when the language is al-
+ready encoded in Unicode. Given that most
+ancient logographic scripts are still undergoing
+the digitization process, this option is currently
+unavailable except for Cuneiform.
+2.1.2 Textual Representations
+The processing of textual features for ancient logo-
+graphic scripts also requires special attention. Un-
+like modern languages, ancient logographic writing
+systems can have multiple latinization standards
+or lack universally agreed-upon transcription stan-
+dards. For example, the cuneiform parsing data
+is not in standard transliteration (ATF)8form, but
+rather, in the UD normalized form. This mismatch
+introduces extra difficulty to downstream tasks, es-
+pecially in low-resource settings.
+A similar issue also exists for Old Chinese: most
+ancient characters do not even exist in the current
+Unicode alphabet. While we may find some mod-
+ern Chinese characters that look similar to the an-
+cient glyphs, they are usually not identical, and
+such a representation loses information from the
+original text.
+For Egyptian hieroglyphs, most characters are
+7https://imagemagick.org
+8ATF is a format used to represent cuneiform text.
+More details can be found at http://oracc.ub.
+uni-muenchen.de/doc/help/encoded in Unicode, but there is no standard en-
+coding for “stacking” multiple glyphs vertically
+(Figure 3). Therefore, we do not include the Uni-
+code text for our ancient Egyptian data as they are
+not available.
+2.2 Tasks
+Our benchmark covers three tasks (Table 1): trans-
+lation, dependency parsing, and attribute classi-
+fication. The model performance on these tasks
+reflects various aspects of ancient language un-
+derstanding. To better understand the information
+loss when using a pipeline approach, we also re-
+port performance using this method: predicting the
+transliteration first and using the noisy predicted
+transliteration for downstream tasks.
+Machine translation. The task is to translate the
+ancient languages, represented by either text or im-
+ages, into modern languages, such as English. In all
+of our experiments, we translate ancient languages
+into English.
+Dependency parsing. Given a sentence in the
+ancient language, the task is to predict the depen-
+dency parse tree (Tesnière, 1959) of the sentence.
+In the dependency parse tree, the parent of each
+word is its grammatical head.
+Attribute classification. The task is to predict an
+attribute of the given artifact, for example, prove-
+nience (found place), time period, or genre.

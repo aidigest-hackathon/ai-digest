@@ -1,0 +1,124 @@
+4 Data Collection Methodology
+This section outlines how we collect and annotate
+our dataset with context-dependent actions.
+4.1 Agent Training
+Managing complex guidelines requires ﬁltering
+for top agents, which we do by certifying Mechan-
+ical Turk (MTurk) workers through an extensive
+20-question quiz touching on all aspects of task
+completion. Keeping the bar high, we set a mini-
+mum threshold of 80% accuracy of the quiz which
+resulted in a low 20% pass rate. After passing the
+exam, we offered the answer key to agents which
+further improved understanding. We also created
+short, 10-minute tutorial videos to showcase how
+to handle the most difﬁcult aspects of the task.
+A group chat app was also deployed to offer live
+feedback for agents, simulating how supervisors
+coach customer service representatives in real life.
+Finally, we carefully designed an incentive struc-
+ture that rewards agents for correctly identifying
+the user intent to encourage clariﬁcation behavior.
+(Appendix A covers more details.)
+4.2 Expert Live Chat
+Rather than utilizing Wizard-of-Oz techniques
+(such as in MultiWOZ), we developed Expert
+Live Chat which contains three unique aspects:(1) Conversations are conducted continuously in
+real-time. (2) Users involved are not interchange-
+able. (3) Players are informed that all participants
+are human – no wizard behind the scenes.
+4.2.1 Synchronous Two-person Dialogue
+Normal human conversations occur in real-time,
+but coordinating multiple users in this manner
+is resource-intensive, so other datasets often em-
+ployed workarounds to avoid this difﬁculty. For
+example, other works have applied rules (Bordes
+et al., 2017), templates (Byrne et al., 2019) or
+paraphrasing (Shah et al., 2018) to produce con-
+versations. Wizard-of-Oz (WoZ) techniques in-
+corporate humans into the mix by allowing one
+of them to play the system role as a wizard
+behind the scenes (Kelley, 1984). In particu-
+lar, (Budzianowski et al., 2018) decomposed di-
+alogues into individual turns, where for each turn
+a new author is responsible for reading the con-
+text and generating the next plausible response.
+Despite the time-consuming nature, some datasets
+have produced synchronous dialogues between
+two humans (Lewis et al., 2017). However, the
+skill sets of ABCD workers are notably unequal,
+exacerbating the matching problem.
+4.2.2 Pairing Users of Unequal Capability
+Expert Live Chat matches a highly trained agent
+with a knowledgeable, yet otherwise average cus-
+tomer in real-time. Since the backgrounds are
+uneven, unlike other datasets with concurrent
+users (Lewis et al., 2017; Zhang et al., 2018; Das
+et al., 2017b), incoming Turkers cannot simply be
+randomly assigned a role. In other words, having
+twenty participants does not necessarily equate to
+ten conversations since it’s possible that only a
+quarter of them are qualiﬁed as agents. When such
+an imbalance inevitably arises, one group must
+wait until someone from the other side becomes
+available. However, leaving either side waiting for
+too long leads to serious consequences since idle
+time directly affects their pay rate.
+To minimize the likelihood of such an outcome,
+we ﬁrst ensure that a reasonable pool of agents
+are always available. Then, we increase the num-
+ber of active customers by methodically inviting a
+subset of customers one batch at a time. To do so,
+we established a qualiﬁcation exam for customers
+to ensure their availability during a speciﬁed time
+period. Finally, we also redesigned the chat appli-
+cation to make the waiting room experience moreFigure 2: The Agent Dashboard is split into three sec-
+tions. KB Query actions always have system output,
+while actions in the Interaction Zone require user input.
+The FAQ/Policy section is associated with describing
+company policies and technical troubleshooting.
+palatable. (See Appendix B for full breakdown.)
+With these changes, we successfully increased the
+pairing rate from 18 out of 80 active users up to
+72 out of 83, an increase of nearly 400%, while
+maintaining wait times under 10 minutes.
+4.2.3 Interaction Framework
+Besides pairing, we increased the likelihood of
+collecting rich dialogues without the need for ex-
+tensive instructions by optimizing the chat experi-
+ence itself. In particular, we observed the greatest
+gains by grounding the conversation to the relat-
+able scenario of online shopping, which provided
+immediate context to participants without requir-
+ing any extra training.
+For example, the Agent Dashboard was ar-
+ranged to closely reﬂect actual agent workspaces
+(Figure 2). On the customer side, scenarios in the
+Customer Panel included an image of the product
+being discussed, along with other meta-data such
+as the brand or price to match a true shopping ex-
+perience as much as possible (Appendix H). We
+also explicitly told customers the other speaker
+was human to encourage natural responses over
+conﬁned commands meant for machines. Most
+importantly, customers were given dynamically
+generated, natural-language prompts that did not
+include information about the values needed to re-
+solve their issue. As a general framework, Ex-pert Live Chat can be applied in any real-world
+scenario involving an expert and novice. Indeed,
+increasing the verisimilitude of the experience is
+precisely what allowed higher quality dialogues to
+be generated by the workers.
+4.3 Annotation of Actions and Values
+The ﬂows and subﬂows are automatically anno-
+tated since we have the provenance of each intent
+when generating the customer prompt. Addition-
+ally, given the ground truth subﬂow of each con-
+versation, we can deterministically map them to
+the correct section within the Agent Guidelines
+outlining the correct actions. Calculating accu-
+racy then becomes a simple exercise to align the
+predicted actions with the ones required by the
+manual. In this way, we capture a key beneﬁt of
+machine-generated text (Shah et al., 2018) without
+sacriﬁcing the beneﬁt of engaging real users.

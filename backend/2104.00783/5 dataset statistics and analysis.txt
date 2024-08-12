@@ -1,0 +1,407 @@
+5 Dataset Statistics and Analysis
+We validate all dialogues to pass quality thresh-
+olds such as including a minimum number of ac-
+tions and avoiding copy/paste behavior. After ﬁl-
+tering, we end up with 10,042 total conversations
+with an average of 22.1 turns – the highest turn
+count among all compared datasets. Unsurpris-
+ingly, ABCD includes more actions per dialogue
+than other datasets, by at least a factor of two.
+ABCD also contains a lower absolute number of
+tokens, but also has the highest variance in the
+number of tokens per turn. (See Table 2.)
+Since each subﬂow represents a unique cus-
+tomer intent, ABCD contains 55 user intents
+evenly distributed through the dataset. By in-
+terpreting buttons as domains, the dataset con-
+tains 30 domains and 231 associated slots, com-
+pared to 7 domains and 24 slots within Multi-
+WOZ (Budzianowski et al., 2018).
+By grounding to the relatable scenario of chat-
+ting with customer support of an online retail
+company, speakers often showcase various forms
+of natural dialogue, such as offering diverse rea-
+sons for shopping or asking detailed follow-up
+questions. Furthermore, the unconstrained nature
+of Expert Live Chat allows users to chat with each
+other in a free-form style. Dialogues exhibited
+normal texting behavior such as users speaking for
+many turns in a row or ﬁxing typos with a star in
+the subsequent line. Other examples of linguistic
+phenomenon can be observed in Table 5.Metric DSTC2 M2M KVRET MultiWOZ SGD MultiDoGO ABCD
+Num of Dialogues 1,612 1,500 2,425 8,438 16,142 40,576 8,034
+Num of Turns 23,354 14,796 12,732 113,556 329,964 813,834 177,407
+Num of Tokens 199,431 121,977 102,077 1,490,615 3,217,369 9,901,235 1,626,160
+Avg. Turns / Dialogue 14.49 9.86 5.25 13.46 20.44 20.06 22.08
+Avg. Tokens / Turn 8.54 8.24 8.02 13.13 9.75 12.16 9.17
+Std Dev. Tokens / Turn 2.95 5.99 6.07 6.19 6.48 –* 6.80
+Avg. Actions / Dialogue 1.0 1.0 1.0 1.81 1.24 –* 3.73
+No. Unique Tokens 986 1,008 2,842 23,689 30,352 70,003 23,686
+No. Unique Slots 8 14 13 24 214 73 231
+No. Slot Values 212 138 1,363 4,510 14,139 55,816 12,047
+No. Domains 1 2 3 7 16 6 30
+Table 2: Comparison of ABCD to similar dialogue datasets. Numbers reported are for the train split on all datasets,
+with bold values indicating the top score for each metric. *MultiDoGO is not public, unable to calculate new stats.
+6 ABCD as a Dialogue Benchmark
+The novel features in ABCD brings two new di-
+alog tasks, Action State Tracking and Cascading
+Dialogue Success. We also build baseline systems
+that are variants of standard dialogue models and
+report their results on ABCD.
+6.1 Action State Tracking
+Action State Tracking (AST) aims at detecting
+the pertinent intent by interpreting customer utter-
+ances while taking into account constraints from
+the Agent Guidelines, an aspect not considered in
+traditional dialog state tracking (DST). For exam-
+ple, a conceivable dialogue task might entail help-
+ing a customer [Reset Password] once this intent
+has been identiﬁed. In contrast, the appropriate
+next step within AST is governed by the Agent
+Guidelines, which might require [Verify Identity]
+of the customer ﬁrst, or any number of other ac-
+tions, before executing the password reset.
+Each series of actions is considered a unique
+subﬂow that belongs to a number of high-level
+conversational ﬂows. Each individual action in-
+cludes the active button bto click and its corre-
+sponding slots sand valuesv. The task consists
+of executing an action, which constitutes a sin-
+gle agent turn. More speciﬁcally, given a context
+Ct= [x1,x2,...,x t]wherextcan be a customer
+utterancexc
+t, an agent utterance xa
+t, or a prior ac-
+tionxb
+t, a model should predict the button of the
+current action as well as the relevant slots and val-
+ues, if any exist{xb
+t+1= (b,s,v )∈B×S×V} .
+This structure is designed to mimic DST where
+each user intent is broken down into domains,
+slots and values (d,s,v ). For both AST and DST,
+the higher level domain or button can have vary-ing slots. The reverse is also true – a given slot
+can be associated with multiple domains or but-
+tons. Lastly, both contain values that can be enu-
+merable (i.e. payment types or shipping statuses)
+or non-enumerable (phone numbers or email ad-
+dresses). Following the pattern set by Rastogi
+et al. (2020b), enumerable values are given in the
+ontology to be accessible by a model, whereas the
+non-enumerable items are not.
+Despite the similar structure, AST deviates
+from DST since predicting the right action re-
+quires not only parsing the customer utterance,
+but also adhering to Agent Guidelines. Suppose
+a customer is entitled to a discount which will be
+offered by issuing a [Promo Code] . The customer
+might request 30% off, but the guidelines stipulate
+only 15% is permitted, which would make “30”
+a reasonable, but ultimately ﬂawed slot-value. To
+measure a model’s ability to comprehend such nu-
+anced situations, we adopt overall accuracy as the
+evaluation metric for AST.
+6.2 Cascading Dialogue Success
+Since the appropriate action often depends on
+the situation, we propose the Cascading Dialogue
+Success (CDS) task to measure a model’s ability
+to understand actions in context. Whereas AST
+assumes an action occurs in the current turn, CDS
+gives an agent the additional options of respond-
+ing with an utterance or ending the conversation.
+Moreover, proﬁciency is no longer measured as
+success over isolated turns but rather as success
+over sequences of consecutive turns.
+Formally, given Ct= [x1,x2,...,x t]as a con-
+text composed of utterances xc,xa∈U and ac-
+tionsxb∈A, a model should predict all remain-
+ing stepsx>talong with their realized forms. Pos-sible next steps are to take an action, respond with
+text or end the task. When the next step is an
+actionxb
+t+1, the model should predict the button
+with its slots and values as in AST. If the agent
+speaks in the next step xa
+t+1, the model should
+rank the true utterance highest, as measured by re-
+call metrics.1Finally, the model should recognize
+when to end the conversation.
+Rewarding the model only when it predicts ev-
+ery step correctly is counter-productive because
+minor variations in sentence order do not alter
+overall customer satisfaction. Therefore, CDS is
+scored using a variation on Cascading Evalua-
+tion (Suhr et al., 2019). Rather than receiving a
+single score for each conversation, cascaded eval-
+uation allows the model to receive “partial credit”
+whenever it successfully predicts each successive
+step in the chat. This score is calculated on ev-
+ery turn, and the model is evaluated based on the
+percent of remaining steps correctly predicted, av-
+eraged across all available turns. (See Appendix C
+for more details.)
+6.3 Baseline Models
+We also run several baselines on these new tasks.
+The backbone of all our baseline systems is a
+pre-trained Transformer-based model acting as a
+context encoder. More speciﬁcally, given the di-
+alogue history as a series of utterances, we ﬁrst
+join the utterances together with a [SEP] token
+and then tokenize the entire input using Word-
+Piece (Schuster and Nakajima, 2012). Next, we
+feed the entire input into a BERT model and per-
+form a learned pooling on the hidden states in the
+ﬁnal layer, which results in a ﬁxed-length latent
+vectorhenc∈R128(Wolf et al., 2019). After-
+wards, we attach a variety of prediction heads con-
+ditioned on the hencvector to generate the ﬁnal
+output. Details of the prediction heads for the two
+proposed tasks are described next.
+We break down Action State Tracking (AST)
+into two sub-problems, button-slot prediction and
+value-ﬁlling. Given the ontology, button predic-
+tion is a straightforward classiﬁcation task over
+231 known options, so the prediction head is just a
+linear classiﬁer with a softmax activation for nor-
+malization:Pb·slot=Softmax (Wah⊤
+enc+ba).
+To handle value-ﬁlling, we further decompose
+1Sentences with similar semantics may be formulated in
+several ways, so we opt for response retrieval over text gen-
+eration since common metrics (i.e. BLEU score) tend to be-
+come unreliable in these situations (Liu et al., 2016).the task into predicting enumerable and non-
+enumerable values. The ontology lists out all |E|
+enumerable values, so the prediction head penum
+simply maps the hidden state hencinto the ap-
+propriate dimensions. To handle non-enumerable
+values, we follow the insight from (Ma et al.,
+2019) which notes that practically all such values
+are stated by the customer in conversation, so a
+model can copy these values from the tokenized
+context. During pre-processing, we extract up to
+|N|unique tokens from the natural language cus-
+tomer utterances, where pcopythen represents the
+distribution over these possible options.2
+We imitate the TRADE architecture from (Wu
+et al., 2019), where conditioned on the action, the
+model chooses to either copy from the context
+pcopyor select from the enumerable entities penum
+based on a gating mechanism. The gate is condi-
+tioned on the hidden state hencas well as a learned
+context vector ci. Concretely,
+penum=Softmax (Weh⊤
+enc+be)∈R|E|
+pcopy=Softmax (Wch⊤
+enc+bc)∈R|N|
+ci=W⊤
+c·pcopy∈Rhid
+pgate=σ(Wg·[henc;ci])∈R1
+Pval= [pgate×pcopy; (1−pgate)×penum]∈R|E+N|
+whereσrepresents the Sigmoid function and [·;·]
+is the concatenation operation. The ﬁnal value
+predictions are the argmax of Pvalwhich merge
+the probabilities of penumandpcopytogether.
+For Cascading Dialogue Success (CDS), we
+also tackle next step selection, utterance ranking,
+and intent classiﬁcation. Next step selection is a
+choice between retrieve utterance ,take action and
+end conversation . Intent classiﬁcation consists of
+choosing from the 55 available subﬂows. Given
+this basic setting, both tasks use the same setup of
+a linear layer followed by a softmax, albeit with
+their own respective weights WNS∈R3×hidand
+WIC∈R55×hid. When the next step is to take
+action , the AST model is reused to determine the
+button-slot and value. When end conversation is
+selected, all future predictions are ignored, much
+like an <EOS> symbol signiﬁes stopping.
+This leaves us with utterance ranking, which is
+only evaluated when retrieve utterance is chosen
+as the next step. Our ranker reproduces the design
+2Choosing larger |N|leads to higher recall, but lower pre-
+cision. We found N= 100 to work well in practice.from (Guu et al., 2020), where the encoded con-
+texthctxis compared against each encoded candi-
+date response hcand to produce a ranking score.
+To embed each jthcandidatedjwe ﬁrst create
+its inputdinput
+j . Following standard practice, we
+prepend the candidate text djwith [CLS] , sepa-
+rate the individual utterances uiwithin the candi-
+date response using a [SEP] token, and append
+a ﬁnal [SEP] token afterwards. (Devlin et al.,
+2019). This input dinput
+j is then fed into a static
+pretrained BERT model to get an initial hidden
+state, which is ﬁnally projected using a learned
+weightWdj∈R128×hidto producehcand. To
+obtainhctxwe start with the hidden state henc
+from before and apply a projection matrix WUR∈
+R128×hidto reach the desired dimensionality.
+dinput
+j = [CLS]u1[SEP]u2[SEP]...[SEP]un[SEP]
+hcand=WdjBERT base(dinput
+j)⊤∈R128
+hctx=WURh⊤
+enc∈R128
+f(xi,dj) =h⊤
+ctxhcand
+Prank
+j=exp(f(xi,dj))
+Σd′
+jexpf(xi,d′
+j)
+The ﬁnal rank is given by normalizing each jth
+score against all other candidate scores. We use
+the training objective from (Henderson et al.,
+2019) to calculate the loss:
+J=M=100∑
+j=1P(xi,dj)−M∑
+i=1logM∑
+j=1expf(xi,dj)
+whereMis the size of the total candidate set.
+6.4 Experiments
+We performed experiments on the two newly pro-
+posed tasks, AST and CDS. AST consists of two
+subtasks, button-slot prediction and value-ﬁlling,
+while CDS builds on this with three additional
+subtasks of next step selection, utterance ranking,
+and intent classiﬁcation. For both tasks, we exper-
+imented with two types of frameworks, a pipeline
+version and an end-to-end version. The pipeline
+version trains each subtask separately while the
+end-to-end optimizes all tasks jointly (Liang et al.,
+2020; Rastogi et al., 2020a; Ham et al., 2020).
+The pipeline model uses a BERT model trained
+with the RAdam optimizer (Liu et al., 2020).
+To test the performance of different pretrained
+models under the end-to-end framework, weMetric Pipeline BERT AlBERT RoBERTa
+B-Slot 86.7% 89.9% 90.9% 93.6%
+Value 42.1% 61.6% 61.0% 67.2%
+Action 32.3% 59.5% 59.2% 65.8%
+Table 3: Metrics for Action-State Tracking. Pipeline
+values come from models trained on individual sub-
+tasks, other models are trained jointly end-to-end.
+experiment with three additional encoders, Al-
+BERT (Lan et al., 2020), RoBERTa (Liu et al.,
+2019) and RoBERTa-Large. AlBERT model has
+an inter-sentence coherence task and a lighter
+memory footprint compared to BERT, while
+RoBERTa model has substantially more data and
+hyper-parameter tuning in pretraining than BERT.
+In the future, we also plan to include GPT-based
+models, such as DialoGPT (Zhang et al., 2020) in
+our comparison.
+6.5 Results
+For both tasks, moving from the pipeline archi-
+tecture to a jointly trained method displayed no-
+ticeable improvement in accuracy. As hinted at
+in prior works (Liang et al., 2020), we suspect
+the group effort gives each subtask extra super-
+vision from other subtasks for more data efﬁcient
+training. In the AST task, we found steady im-
+provements as we move from the older to the
+newer models with vanilla BERT at 59.5% accu-
+racy and RoBERTa doing the best at 65.8%. For
+the CDS task, we found a similar trend where
+RoBERTa-Large outperforms BERT, but only by
+a mere 0.6%. We hypothesize this small gap be-
+tween models is due to the fact that none were par-
+ticularly trained on dialogue data which impacts
+their ability to produce a useful encoding (Wu and
+Xiong, 2020).
+Separately, we evaluate CDS subtask difﬁculty
+by asking human volunteers to select the correct
+label from a list of possible options. As an ex-
+ample, workers would be presented with 55 dif-
+ferent classes for Intent Classiﬁcation and asked
+to choose the right one. Since humans typically
+struggle when choosing from large collections of
+items, ﬁne-tuned models performed roughly on
+par or better compared to humans in this unnat-
+ural setting. On the other hand, human evaluation
+for the overall CDS task was judged by measuring
+the success rate in a standard conversational sce-
+narios where behavioral instincts are activated, so
+humans were able to excel on this environment.Model Intent Nextstep B-Slot Value Recall@1/5/10 Cascading Eval
+Human 85.5% 84.0% 79.0% 77.5% N/A 82.7%
+Pipeline 90.4% 83.8% 86.7% 42.1% 26.2/51.7/63.1 18.2%
+BERT-base 89.3% 87.6% 85.9% 73.1% 21.7/46.6/58.7 31.3%
+AlBERT 88.5% 87.2% 86.1% 70.4% 22.1/47.4/58.9 31.2%
+RoBERTa 89.7% 87.8% 87.6% 73.1% 21.6/46.7/58.6 31.5%
+RoBERTa-Large 90.5% 87.5% 88.5% 73.3% 22.0/ 47.8/59.1 31.9%
+BERT-base w/o Action Info 88.4% 76.8% 83.7% 63.4% 18.6/43.0/57.9 29.2%
+BERT-base w/ Guidelines 83.2% 87.5% 85.6% 72.4% 21.8/46.9/58.5 30.6%
+BERT-base w/ Intent Info 100% 88.6% 88.9% 73.8% 22.2/47.6/59.1 32.3%
+BERT-base w/ Intent + Guide 100% 89.2% 89.3% 74.0% 22.6/48.1/59.4 32.7%
+Table 4: Cascading dialogue success task performance with breakdown of all ﬁve subtasks. Numbers displayed
+are the average of three seeds. Human evaluation conducted with size of 100 samples per person.
+6.6 Ablation Study
+We perform an ablation study to test the signif-
+icance of the key features in ABCD. Recall, ac-
+tions are characterized by their dual nature of re-
+quiring signals from both the customer and the
+company guidelines. To that end, we provided the
+ground truth intent to measure the impact of the
+customer side. Conversely, we also test the com-
+pany side by masking out invalid buttons based on
+the insight that the Agent Guidelines are useful for
+narrowing down the range of possible actions. In
+both situations, we would expect that providing
+such oracle guidance would boost performance.
+Lastly, note that the appropriate action depends on
+the outcomes of prior actions, so for a ﬁnal exper-
+iment we removed prior actions and their explana-
+tions from the context to test their impact on task
+success. (See Appendix E for details.)
+We observe that supplying the intent informa-
+tion to the BERT model causes a noticeable boost
+in dialog success, bringing the score to 32.3%.
+However, augmenting the model with knowledge
+of the guidelines unexpectedly dropped perfor-
+mance down to 30.6%. Further analysis revealed
+the imperfect intent classiﬁer would occasionally
+mask out valid buttons, leaving only incorrect
+ones to choose from. As a result, the downstream
+action predictor would be prevented from doing
+its job, causing errors to accumulate. To test this
+hypothesis, we ran another model (Intent+Guide)
+which had access to guidelines along with an ora-
+cle intent classiﬁer. This model reached the peak
+observed performance of 32.7%, highlighting the
+importance of both components. As a ﬁnal result,
+removing action information away from action-
+based conversations unsurprisingly causes a major
+performance drop (Table 4).7 Conclusion and Future Work
+In conclusion, we have presented ABCD which
+includes over 10K dialogues that incorporate pro-
+cedural, dual-constrained actions. Additionally,
+we established a scalable method for collecting
+live human conversations with unequal partners.
+We found that pre-trained models perform decent
+on Action State Tracking, but there is a large gap
+between humans agents and the top systems for
+Cascading Dialogue Success.
+We plan to incorporate GPT-related mod-
+els (Hosseini-Asl et al., 2020), as alternate forms
+of preprocessing have shown promise in other
+NLP tasks. Other techniques could also be used
+to incorporate speaker info, action semantics and
+other meta-data. Wholly new systems that attend
+to the Agent Guidelines in a fully differentiable
+manner are also worth exploring. By grounding
+dialogues to in-depth scenarios with explicit poli-
+cies, we hope to have pushed towards a better un-
+derstanding of dialogue success.
+Acknowledgments
+The authors would like to thank Tao Lei, Felix
+Wu and Amnol Kabra for their feedback and sup-
+port. We would also like to thank the anonymous
+NAACL 2021 reviewers for pointing out speciﬁc
+areas of confusion in our submission, which we
+have tried our best to clarify.
+Ethical Considerations
+This paper presents a new dataset which was col-
+lected through the use of crowdworkers. All agent
+workers were compensated a fair wage based on
+their local standard of living, where their loca-
+tion was determined during the vetting process.
+(Please refer to Appendix A for more details.)

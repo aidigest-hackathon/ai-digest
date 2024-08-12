@@ -1,0 +1,128 @@
+4 Proposed Method
+According to the sensor fusion literature for conventional cameras, the main
+strategies for combining stereo images with sparse depth measurements from
+active sensors consist of i) concatenating the two modalities and processing them
+as joint inputs with a stereo network [12,46,69,81], ii) modulating the internal
+cost volume computed by the backbone itself [25,49,69,82] or, more recently, iii)
+projecting distinctive patterns on images according to depth hints [4].
+We follow the latter path, since it is more effective and flexible than the
+alternatives – which can indeed be applied to white box frameworks only. For
+this purpose, we design two alternative strategies suited even for gray and black
+box frameworks, respectively, as depicted in Fig. 3.
+4.1 Virtual Stack Hallucination – VSH
+Given left and right stacks SL,SRof size W ×H×C and a set Zof depth measure-
+ments z(x, y)by a sensor, we perform a Virtual Stack Hallucination (VSH), by
+augmenting each channel c∈C, to increase the distinctiveness of local patterns6 L. Bartolomei et al.
+(a) (b) (c)
+Fig.3: Overview of a generic event-based stereo network and our hallucina-
+tion strategies. State-of-the-art event-stereo frameworks (a) pre-process raw events
+to obtain event stacks fed to a deep network. In case the stacks are accessible, we
+define the model as a gray box, otherwise as a black box . In the former case (b), we can
+hallucinate patterns directly on it (VSH). When dealing with a black box (c), we can
+hallucinate raw events that will be processed to obtain the stacks (BTH).
+and thus ease matching. This is carried out by injecting the same virtual stack
+A(x, y, x′, c)intoSL,SRrespectively at coordinates (x, y)and(x′, y).
+SL(x, y, c )← A (x, y, x′, c)
+SR(x′, y, c)← A (x, y, x′, c)(1)
+with x′obtained as x−d(x, y), with disparity d(x, y)triangulated back from
+depth z(x, y)asbf
+z(x,y), according to the baseline and focal lengths b, fof the
+stereo system. We deploy a generalized version of the random pattern operator
+Aproposed in [4], agnostic to the stacked representation:
+A(x, y, x′, c)∼ U(S−,S+) (2)
+withS−andS+the minimum and maximum values appearing across stacks
+SL,SRandUa uniform random distribution. Following [4], the pattern can
+either cover a single pixel or a local window. This strategy alone is sufficient al-
+ready to ensure distinctiveness and to dramatically ease matching across stacks,
+even more than with color images [4], since acting on semi-dense structures –
+i.e., stacks are uninformative in the absence of events. It also ensures a straight-
+forward application of the same principles used on RGB images, e.g., to combine
+theoriginalcontent(color)withthevirtualprojection(pattern)employingalpha
+blending [4]. Nevertheless, we argue that acting at this level i) requires direct
+access to the stacks, i.e., a gray-box deep event-stereo network, and ii) might be
+sub-optimal as stacks encode only part of the information from streams.
+4.2 Back-in-Time Hallucination – BTH
+A higher distinctiveness to ease correspondence can be induced by hallucinating
+patterns directly in the continuous events domain. Specifically, we act in the
+so-called event history : given a timestamp tdat which we want to estimateLiDAR-Event Stereo Fusion 7
+(densifiedfor visualizationpurpose)
+(a)(b)tz= tdtz= td-15
+tdtdtdtdtdtdtdtdtdtdtdtd
+Fig.4: Overview of Back-in-Time Hallucination (BTH). To estimate disparity
+attd, if LiDAR data is available – e.g., at timestamp tz=td(green) or tz=td−15
+(yellow) – we can naïvely inject events of random polarities at the same timestamp tz
+(a). More advanced injection strategies can be used – e.g. by hallucinating multiple
+events, starting from td, back-in-time at regular intervals (b).
+disparity, raw events are sampled from the left and right streams starting from
+tdand going backward, according to either SBN or SBT stacking approaches, to
+obtain a pair of event histories EL=
+eL
+k	N
+k=1andER=
+eR
+k	M
+k=1, where eL
+k, eR
+k
+are the k-th left and right events. Events in the history are sorted according to
+their timestamp – i.e., inequality tk≤tk+1holds for every two adjacent ek, ek+1.
+At this point, we intervene to hallucinate novel events: given a depth mea-
+surement z(ˆx,ˆy), triangulated back into disparity d(ˆx,ˆy), we inject a pair of
+fictitious events ˆeL= (ˆx,ˆy,ˆp,ˆt)andˆeR= (ˆx′,ˆy,ˆp,ˆt)respectively inside ELand
+ER, producing ˆEL=
+eL
+1, . . . , ˆeL, . . . , eL
+N	
+and ˆER=
+eR
+1, . . . , ˆeR, . . . , eR
+M	
+. By
+construction, ˆeLandˆeRadhere to i) the time ordering constraint, ii) the geom-
+etry constraint ˆx′= ˆx−d(ˆx,ˆy)and iii) a similarity constraint – i.e.,ˆp,ˆtare the
+same for ˆeLandˆeR. Fictitious polarity ˆpand fictitious timestamp ˆtare two de-
+grees of freedom useful to ensure distinctiveness along the epipolar line and ease
+matching, according to which we can implement different strategies summarized
+in Fig. 4, and detailed in the remainder.
+Single-timestamp injection. The simplest way to increase distinctiveness
+is to insert synchronized events at a fixed timestamp. Accordingly, for each depth
+measurement d(ˆx,ˆy), a total of Kˆx,ˆypairs of fictitious events are inserted in
+EL,ER, having polarity ˆpkrandomly chosen from the discrete set {−1,1}. Times-
+tamp ˆtis fixed and can be, for instance, tzat which the sensor infers depth, that
+can coincide with timestamp tdat which we want to estimate disparity – e.g.,
+tz=td= 0in the case depicted in Fig. 4 (a). Inspired by [4], events might be
+optionally hallucinated in patches rather than single pixels. However, as depth
+sensors usually work at a fixed acquisition frequency – e.g., 10Hz for LiDARs –
+sparse points might be unavailable at any specific timestamp. Nonetheless, since
+EL,ERencode a time interval, we can hallucinate events even if derived from
+depth scans performed in the past –e.g., at tz< td, – by placing them in the
+proper position inside EL,ER.
+Repeatedinjection. Thepreviousstrategydoesnotexploitoneofthemain
+advantages of events over color images, i.e. the temporal dimension, at its best.
+Purposely, we design a more advanced hallucination strategy based on repeated
+naïve injections performed along the time interval sampled by EL,ER. As long
+as we are interested in recovering depth at tdonly, we can hallucinate as many8 L. Bartolomei et al.
+events as we want in the time interval before t–i.e., for tz=td= 0, over the en-
+tire interval as shown in Fig. 4 (b) – consistent with the depth measurements at
+tditself,whichwillincreasethedistinctivenessintheeventhistoriesandwillease
+the match by hinting the correct disparity. Inspired by the stacked representa-
+tions introduced in Sec. 3, we can design a strategy for injecting multiple events
+along the stream. Accordingly, we define the conservative time range [t−, t+]of
+the events histories EL,ER, with t−= min
+tL
+0, tR
+0	
+andt+= max
+tL
+N, tR
+M	
+and
+divide it into Bequal temporal bins. Then, inspired by MDES [43], we run B
+single-timestamp injections at ˆtb=2b−1
+2b(t+−t−) +t−, with b∈ {1, . . . , B }.
+Additionally, each depth measurement is used only once – i.e., the number of
+fictitious events Kb,ˆx,ˆyin the b-th injection is set as Kb,ˆx,ˆy←Kˆx,ˆyδ(b, D ˆx,ˆy)
+where δ(·,·)is the Kronecker delta and Dˆx,ˆy←round (XU(B−1) + 1)is a ran-
+dom slot assignment. We will show in our experiment how this simple strategy
+can improve the results of BTH, in particular increasing its robustness against
+misaligned LiDAR data – i.e., measurements retrieved at a timestamp tz< td.

@@ -1,0 +1,72 @@
+6 Related work
+Because ancient languages are often low-resource,
+they present challenges that are closely related to
+other domains of NLP, such as low-resource ma-
+chine learning and multi-lingual transfer learning.
+Recent work has explored the application of NLP
+techniques to ancient languages from the following
+perspectives:
+Multilingual transfer learning and disjoint char-
+acter sets. Muller et al. (2020) studied hard-to-
+process living languages such as Uyghur, and re-
+ported that a non-contextual baseline outperforms
+all pre-trained LM-based methods. Ancient lan-
+guages also face the same problem, with even less
+data available. A major challenge that is mostly
+specific to ancient logographic languages, however,
+is the almost non-existent overlap of their symbol
+inventories with those of high-resource languages.
+Visual representation of languages. Recently,
+several works have studied language processing
+based on images of text. Rust et al. (2023) pre-
+trained a masked language model on digitally ren-
+dered text and achieved comparable performance
+with text-based pre-training strategies on down-
+stream tasks. Salesky et al. (2023) found that a
+multi-lingual translation system with pixel inputs
+was able to outperform its textual counterpart.
+Machine learning for ancient languages. Som-
+merschield et al. (2023) surveyed the status of
+pipelines for ancient language processing. Notably,
+the study concludes that applying machine learning
+methods to ancient languages is bottlenecked by the
+cost of digitization and transcription. According to
+the Missing Scripts Project,11only 73 of 136 dead
+writing systems are encoded in Unicode. Ancient
+11https://worldswritingsystems.org/languages, such as Ancient Greek or Latin (Bam-
+man and Burns, 2020), benefit greatly from mul-
+tilingual pre-training techniques, such as mBERT,
+XLM-R (Conneau et al., 2020), and BLOOM (Scao
+et al., 2022). The applicability of these techniques
+is limited when it comes to languages that were
+historically written in obsolete or extinct writing
+systems—for instance, languages like Sumerian
+and Elamite were recorded in Cuneiform script and
+ancient Chinese was inscribed on oracle bone or
+bamboo. However, observations by existing work
+support the potential utility of visual processing
+pipelines for ancient languages.
+Logographic writing systems. Logography typi-
+cally denotes a writing system in which each glyph
+represents a semantic value rather than a phonetic
+one, however, all the languages studied in our paper
+have at least some phonetic component based on
+the rebus principle. This paper emphasizes ancient
+logographies that (i) possess extensive glyph in-
+ventories; (ii) have feature glyphs with ambiguous
+transliterations or functional uses; and (iii) are low-
+resource with much of data remaining in photo for-
+mats (Caplice et al., 1991; Allen, 2000; Woodard,
+2004). Existing research on logographic languages
+has predominantly focused on those well-resourced
+and still in use, such as Modern Chinese (Zhang
+and Komachi, 2018; Si et al., 2023), or used data
+that has already been carefully transcribed into
+Latin or annotated with extra semantic informa-
+tion (Wiesenbach and Riezler, 2019; Gutherz et al.,
+2023; Jiang et al., 2024). Our paper aims to ad-
+dress the gap in resources (by proposing new data)
+and methodologies (by adapting visual-only ap-
+proaches) for encoding and analyzing ancient logo-
+graphic languages, leading to more comprehensive
+understanding of historical linguistic landscapes.

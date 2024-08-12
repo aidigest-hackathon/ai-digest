@@ -1,0 +1,231 @@
+4 Experiments and Analysis
+We describe our general model fine-tuning ap-
+proach in §4.1 and analyze model performance
+on the aforementioned tasks in the succeeding sub-
+sections.
+4.1 General Experimental Setup
+We use the Huggingface Transformers library
+(Wolf et al., 2020) in all experiments, except for ma-
+chine translation, where we use the PIXEL-MT and
+BPE-MT models.9We modified code and model
+checkpoints provided by Salesky et al. (2023) based
+on fairseq (Ott et al., 2019) for the two exceptions.
+We use Adam (Kingma and Ba, 2015) as the op-
+timizer for all models, with an initial learning rate
+specified in Table 3. We use early stopping when
+the validation loss fails to improve for ten evalua-
+tion intervals (1000 iteration per interval). For data
+without a standard test set, we run a fixed number
+of training iterations and report the performance
+on the validation set after the last iteration. All
+experiments are conducted on an NVIDIA-RTX
+A6000 GPU, and the training time ranges from 2
+minutes to 50 hours, depending on the nature of
+the task and the size of the datasets. Unless other-
+wise specified, all parameters, including those in
+pre-trained models, are trainable without freezing.
+We summarize other configurations in Table 3.
+4.2 Machine Translation
+We compare the performance of the models on ma-
+chine translation, where we translate ancient Egyp-
+tian (EGY), Akkadian (AKK), and Old Chinese
+(ZHO) into English (Table 4a). We find that the
+PIXEL-MT model consistently achieves the best
+9The prefix PIXEL or BPE also indicates the type of input
+representation the model uses.BLEU score across the three languages, outper-
+forming the second-best method by a large margin.
+Models with pre-training do not always outper-
+form those trained from scratch (Gutherz et al.,
+2023). We find that all models that take textual
+(Unicode or latinized) input achieve worse perfor-
+mance than models trained from scratch with the
+same type of textual input, suggesting that the lack
+of overlap in symbol inventories poses a serious
+problem for cross-lingual transfer learning. Our
+results indicate that choosing the correct input for-
+mat is crucial to achieving the full advantage of
+pre-training.
+In addition, the PIXEL-MT model, pre-trained
+on paired data in modern languages (TED59), sig-
+nificantly outperforms PIXEL + GPT2 (pre-trained
+with masked language modeling) across the board.
+Another model, BERT-MT, which is further pre-
+trained on the same parallel text (TED59) with
+BERT initialization, also achieves comparable per-
+formance. These results emphasize the importance
+of pre-training on modern paired data, empirically
+suggesting that the PIXEL encoder with parallel
+text pretraining is an effective combination for an-
+cient logographic language translation.
+[Pred] Confucius said: Those who lead the people will be good at holding on to the superior.[Ref ]  Confucius said: Those above are fond of "benevolence", …[Pred] At the beginning of my kingship, in my first regnal year, in the fifth month when I sat on the royal throne, (the god) Assur, my lord, encouraged me and I gave (them) to the Hamranu, the Luhutu, Hatalu, Rapiqu, Rapiqu, Rapiqu, Nasiru, Gulasi, Nabatu, …[Ref ] At the beginning of my reign, in my first palu, in the fifth month after I sat in greatness on the throne of kingship, (the god) Assur, my lord, encouraged me and I marched against (the Aramean tribes) Hamaranu, Luhu`atu, Hatallu, Rubbu, Rapiqu, Hiranu, (5) Rabi-ilu, Nasiru, Gulusu, Nabatu,[Pred] after Hes Majesty had as to the Shesmet who satisfies this August, Sopu, the Lord of the East. [Ref ] after His Majesty had come to Shesmet while satisfying this august god, Sopdu, the lord of the EastZHO-ENAKK-ENEGY-EN
+Figure 4: Case study for machine translation using the
+PIXEL-MT model. Notably, there are many spelling
+errors in the predictions, particularly with uncommon
+named entities.
+Qualitative analysis. As shown in Figure 4, the
+low BLEU scores for ZHO-EN translation is a re-
+sult of the translation model failing to capture the
+meaning of the input, instead focusing on repeated
+formatting queues: e.g., “ Confucius said:(a) Machine translation (BLEU score)
+Modality Tokenization Input ModelPre-trained? Source Language
+MLM MT EGY AKK ZHO
+Dataset size (# lines) 2,337 8,056 500
+Visual token-free textline PIXEL + GPT21! ✗ 2.83 7.51 1.14
+Visual token-free textline PIXEL-MT ✗! 29.16 44.15 5.45
+Textual BPE w/ ext vocab2Unicode T5 ! ✗ n/a 12.42 0.28
+Textual byte-level Unicode ByT5 ! ✗ n/a 4.51 0.53
+Textual char-level Unicode Conv-s2s ✗ ✗ - 36.52∗-
+Textual BPE Unicode BPE-MT ✗! 23.26 36.18 1.32
+Textual BPE Latin T5 ! ✗ 21.18 10.67 n/a
+Textual char-level Latin Conv-s2s ✗ ✗ - 37.47∗-
+(b) Attribute prediction (F 1accuracy)
+Modality Tokenization Input Model LNA AKK EGY ZHO
+geo time genre geo time genre
+Number of classes 7 16 12 24 14 3
+Dataset size (# examples) 772 36,454 36,454 36,454 1,320 302
+Majority 14.28 6.25 8.33 4.17 7.14 33.33
+Visual token-free photo ResNet 8.24 75.02 45.45 62.99 n/a n/a
+Visual token-free textline PIXEL 16.56 72.91 50.84 61.44 16.24 52.17
+Textual BPE w/ ext vocab2Unicode BERT n/a 0∗∗0∗∗0∗∗n/a 74.85
+Textual BPE Unicode BERT n/a 72.40 50.85 63.70 n/a 90.30
+Textual byte-level Unicode CANINE n/a 82.83 47.88 56.42 n/a 96.43
+Textual BPE Latin BERT 32.92 80.91 53.45 65.10 34.71 n/a
+Textual BPE Latin mBERT 50.52 83.08 56.71 66.33 36.25 n/a
+Table 4: (a) Results on machine translation (from each of the source languages to English), in terms of BLEU scores.
+MLM denotes models pretrained on unsupervised data with the masked language model (MLM) loss, while MT
+denotes models pretrained with supervised parallel data (TED59). (b) Macro F 1scores for attribute prediction.
+∗: numbers taken from Gutherz et al. (2023), where their models are trained from scratch, i.e., without pretraining.
+∗∗: The character set is 100% disjointed without extending the vocabulary of the model, resulting in zero F 1
+scores.1: This model is trained using PIXEL as the encoder and GPT2 as the decoder, with linear projection
+layers to convert the final layer of PIXEL into a prefix input for GPT2.2: This model is the only one experiencing
+out-of-vocabulary (OOV) issues with Unicode input. To address this, we extended the vocabulary with random
+initialization. n/a: indicates the representation of a specific language does not exist in our benchmark.
+Those who... ” Indeed, given that the topical
+domain of the ZHO-EN translation data is philo-
+sophical writing, achieving an accurate translation
+would be challenging even with a much larger set
+of parallel translations. For AKK-EN, we found
+that the overall quality to be quite good, despite the
+fact that errors in translating named entities appear
+more often than in standard MT tasks. This case
+study suggests that translation performance could
+improve further if we training using a custom target
+language (English) vocabulary. We also show more
+generated examples from the PIXEL-MT model in
+Appendix C.
+4.3 Attribute Classification
+Table 4b summarizes the performance of attribute
+classification with different features and models.
+As expected, the image features can work fairlywell for some of these attribute classification tasks
+as many of the relevant features are visual (e.g., for
+time and location); but, are not generally as effec-
+tive as textual input representations. By comparing
+BERT with latinized input and CANINE on Uni-
+code, we find that when both accurate latinization
+and Unicode representations are available, latiniza-
+tion is the most informative feature—with the ex-
+ception of time period classification for Akkadian.
+This exception is aligned with our understanding
+of Akkadian, as different Cuneiform characters are
+used across different time periods. Thus, in this
+case, Unicode can provide more clues for deter-
+mining the time period of a sample. Note that the
+label distribution is not balanced for most ancient
+language attribution tasks. For more details, refer
+to Chen et al. (2024).Modality Model Input RIAO MCONG
+Dataset Size (# tokens) 5k 130k
+Visual PIXEL Image 92.74 85.22
+Textual BERT Latin 92.13 83.88
+Table 5: Dependency parsing result on Akkadian (eval-
+uated on the UD corpora RIAO and MCONG), in terms
+of labeled attachment scores (LAS). Note that the num-
+ber of tokens are reported.
+4.4 Dependency Parsing
+We compare the dependency parsing performance
+of models with visual and textual encoders (Ta-
+ble 5).10While all models achieve quite high pars-
+ing accuracy, we find that models with visual en-
+coders perform the best on both investigated cor-
+pora (RIAO and MCONG). During training, mod-
+els taking visual input generally converge faster
+than their textual counterparts, which is in line with
+prior work (Salesky et al., 2023) that uses visual
+features for machine translation.
+5 Ablation Study on OCR and Image
+Quality
+As mentioned earlier, the majority of data from
+ancient times remain in the form of photographs.
+We first closely examine two different visual input
+representations for the ZHO-EN translation task,
+handcopied figure andphotograph (§5.1). Next,
+we examine OCR performance on ancient logo-
+graphic languages to gain better understanding of
+this bottleneck for current NLP pipelines (§5.2).
+5.1 Handcopy v.s. Raw Image
+Input representation BLEU
+photograph 2.09
+handcopied figure 5.45
+Table 6: Performance on ZHO-EN translation using the
+PIXEL-MT model with different visual input features.
+For the ZHO-EN translation data, we have ac-
+cess to both photographs of the bamboo slips and
+handcopied textline figures (see the Bamboo script
+example in Figure 3 for reference). As shown in Ta-
+ble 6, the quality of the visual features significantly
+influences the translation accuracy—translations
+derived from photographs yield a low BLEU score
+10We only conduct experiments on Akkadian since it is the
+only language with off-the-shelf dependency annotations.of 2.09, whereas handcopied figures, which typ-
+ically provide clearer and more consistent visual
+data, result in a higher BLEU score of 5.45. This re-
+sult suggests that for models that perform implicit
+OCR as part of the translation process, the clarity
+of the source material is paramount.
+5.2 Text Recognition Study
+We simplify the task of transcribing ancient texts
+by starting with lines of text that have been accu-
+rately segmented. For datasets that include glyph-
+level annotations, we employ glyph classification
+to recognize the text. Details on models and config-
+uration of line-level OCR andglyph classification
+can be found in Appendix B.
+Method Output LNA EGY AKK ZHO
+OCR Unicode 57.17 N/A 5.72 71.85
+OCR Latin 63.44 65.88 21.98 N/A
+Table 7: Line-level OCR results with the best valida-
+tion character error rate (CER) reported. The study
+includes various writing systems using Kraken trained
+from scratch on segmented text lines. N/A: either the
+Unicode or Latin version of the text is not available.
+0 250 500 750 1000 1250
+Number of glyphs |G|20406080Error Rate (%)
+glyph classification
+CTC loss101102103
+Freq count of glyph (log)
+Figure 5: Glyph classification on Old Chinese (ZHO).
+Left axis : we plot the error rate of glyph classification.
+The data point at |G| = 50 shows the classification error
+calculated using the top 50 most frequent glyphs in the
+dataset. The purple horizontal line (71.85%) represents
+the line-level text recognition CER for ZHO, provided
+for reference. Right axis : The frequency count (in
+orange bars) of each glyph in the dataset. Note that the
+counts are in logarithmic scale, illustrating the long tail
+distribution of glyph counts.
+Results. The line-level OCR performance for the
+four languages is presented in Table 7. When com-
+paring digital renderings of text to handwritten sam-
+ples, it is evident that Old Chinese (ZHO) achieves
+a CER of 71.85, while Linear A has a CER of
+57.17. As shown in Figure 5, glyph classificationfor ZHO is approximately 20% less accurate than
+line-level OCR, indicating that contextual features
+significantly aid in recognizing glyphs. Further-
+more, there is a rapid increase in error rate as the
+number of glyphs increases, highlighting the intrin-
+sic challenge of processing logographic languages,
+which typically have a large symbol inventories,
+and their frequency distribution often follows a
+long-tail pattern (see the orange bars in Figure 5).
+Therefore, developing robust visual models that can
+effectively leverage visual features is crucial for im-
+proving NLP on ancient logographic languages.

@@ -1,0 +1,85 @@
+2 Related Work
+Traditional Dialogue Datasets In recent years,
+dialogue datasets have grown in size from hun-
+dreds of conversations to the tens of thou-
+sands (Henderson et al., 2014; Budzianowskiet al., 2018; Peskov et al., 2019). Unlike open-
+domain chatbots often built for entertainment,
+task-oriented dialogue systems trained on such
+datasets are intended for solving user issues. The
+resolution of these issues implicitly requires tak-
+ing actions, where an action is a non-utterance
+decision that depends on both user and system
+inputs. Despite the tremendous number of dia-
+logues, examples in previous benchmarks ﬁxate
+on the single knowledge base (KB) lookup action
+where the agent searches for an item that matches
+the user’s desires and is available in the KB. By
+sticking to this sole interaction, conversations can
+be generated through rules (Weston et al., 2016),
+paraphrased from templates (Byrne et al., 2019)
+or taken from static text scenarios (Zhang et al.,
+2018), leading to dialogues that are predominantly
+homogeneous in nature.
+Many datasets have scaled to more domains
+as well (Eric et al., 2017; Budzianowski et al.,
+2018; Peskov et al., 2019) Since each new domain
+introduces a KB lookup requiring different slot-
+values, the number of unique actions grows as a
+linear function of the number of domains covered.
+Rather than expanding wider, ABCD instead fo-
+cuses deeper by increasing the count and diversity
+of actions within a single domain.
+Exploring Other Avenues Multiple aspects are
+explored by conversational datasets attempting to
+mimic reality. Rashkin et al. (2019) studies the
+ability of a dialogue model to handle empathy,
+while Zhou et al. (2018) focuses on common-
+sense reasoning. Another approach is to aug-
+ment dialogues with multi-modality including au-
+dio (Castro et al., 2019) or visual (Das et al.,
+2017a) components. Other researchers have ex-
+plored grounding conversations with external data
+sources such as personas (Zhang et al., 2018), on-
+line reviews (Ghazvininejad et al., 2018) or large
+knowledge bases (Dinan et al., 2019). Intricate
+dialogues can also appear when studying collab-
+oration (He et al., 2017; Kim et al., 2019) or nego-
+tiation (Lewis et al., 2017; He et al., 2018) which
+strongly encourage interaction with the other par-
+ticipant. In comparison, ABCD aims to make di-
+alogue more realistic by considering distinct con-
+straints from policies.
+Dialogues with Policies Procedural actions fol-
+lowing strict guidelines naturally emerge in dia-
+logue research geared towards real-world appli-Subﬂowsrecover-username,1recover-password,1reset-2fa,1status-service-added,2status-service-removed,2status-
+shipping-question,2status-credit-missing,2manage-change-address,2manage-change-name,2manage-change-
+phone,2manage-payment-method,2status-mystery-fee,3status-delivery-time,3status-payment-method,3status-
+quantity,3manage-upgrade,3manage-downgrade,3manage-create,3manage-cancel,3refund-initiate,4refund-
+update,4refund-status,4return-stain,4return-color,4return-size,4bad-price-competitor,5bad-price-yesterday,5
+out-of-stock-general,5out-of-stock-one-item,5promo-code-invalid,5promo-code-out-of-date,5mistimed-billing-
+already-returned,5mistimed-billing-never-bought,5status,6manage,6missing,6cost,6boots,7shirt,7jeans,7jacket,7
+pricing,8membership,8timing,8policy,8status-active,9status-due-amount,9status-due-date,9manage-pay-bill,9
+manage-extension,9manage-dispute-bill,9credit-card,10shopping-cart,10search-results,10slow-speed10
+Actionsverify-identity, ask-the-oracle, validate-purchase, make-password, promo-code, subscription-status, offer-refund,
+make-purchase, record-reason, enter-details, shipping-status, update-order, pull-up-account, update-account, send-
+link, notify-team, membership, search-faq, try-again, log-out-in, instructions, search-jeans, search-shirt, search-
+boots, search-jacket, search-pricing, search-membership, search-timing, search-policy, select-faq
+Table 1: Full ontology of Agent Guidelines decomposable into high-level ﬂows describing the overall category
+and subﬂows deﬁning a unique set of intents. All actions are also shown. Upper script numeral indicates the ﬂow
+that the subﬂow belongs to. 1: account access, 2: manage account, 3: order issue, 4: product defect, 5: purchase
+dispute, 6: shipping issue, 7: single item query, 8: storewide query, 9: subscription inquiry, 10: troubleshoot site
+cations. Hybrid Code Networks encode busi-
+ness logic through masking templates since vari-
+ous behaviors become nonsensical in certain sit-
+uations (Williams et al., 2017). Research from
+Moiseeva et al. (2020) studies multi-purpose vir-
+tual assistants that attempt to distinguish among
+thirteen explicit actions. The closest prior work
+to ABCD is the Schema Guided Dialogue (SGD)
+dataset, which contains dozens of API calls that
+can be interpreted as individual actions send-
+ing commands to a SQL engine (Rastogi et al.,
+2020b). The functionality of these actions is occa-
+sionally restricted to reﬂect constraints of real-life
+services. The action restrictions within ABCD are
+made explicit by the Agent Guidelines manual.

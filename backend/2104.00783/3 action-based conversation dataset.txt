@@ -1,0 +1,74 @@
+3 Action-Based Conversation Dataset
+In this section, we describe the task setting of
+ABCD by following along with the example di-
+alog shown in Figure 1.
+3.1 Customer
+During data collection, customers are given a sim-
+ple prompt (such as “You want to keep your sub-
+scription another year.”) instead of step-by-step
+instructions, which reﬂects how real-world cus-
+tomers innately understand their own issue, but
+only have a rough idea of how to resolve said is-
+sue. Accordingly, customers within ABCD remain
+oblivious towards what values apply to which ac-
+tions, nor are they aware that actions exist in ﬁrst
+place. This ambiguity forces the agent and cus-
+tomer to collaboratively uncover the correct latent
+intent through back and forth communication, nat-
+urally leading to longer dialogues.3.2 Customer Service Agent
+Following the standard dialog setup, the agent
+starts by parsing the dialogue history to capture the
+customer intent, which in Figure 1 is a subscrip-
+tion extension. ABCD then diverges as the next
+step involves interpreting the Agent Guidelines, a
+document representing the internal policies of a
+company in the online retail domain (See Table 1).
+Using the guidelines, the trained agent should ﬁnd
+the one unique subﬂow corresponding to the cus-
+tomer intent. Each subﬂow in turn is deﬁned by
+exactly one unique sequence of actions.
+While identifying a subﬂow may seem straight-
+forward, information asymmetry prevents the cus-
+tomers from directly revealing the name of their
+intent. For example, a customer might inquire
+about the status of their recent purchase, but an
+agent has over a dozen different subﬂows related
+to order statuses, so selecting the right one sud-
+denly becomes highly non-trivial.
+In our case, the agent eventually ﬁgures out
+the correct subﬂow and begins to execute actions,
+which consists of recording values given by the
+customer, namely the customer’s full name or ac-
+count ID in order to [Pull up Account] . As the
+third action, the guidelines instruct the agent to
+ask for the customer’s membership level. After the
+customer supplies this information, the agent en-
+ters the “guest” value into the agent dashboard by
+clicking the [Membership] button. Buttons have
+variable slots that may or may not need to be ﬁlled,
+depending on the context (See Table 1 for a full
+list). Dialogue success demands that agents exe-
+cute a chain of such actions in the right order with
+the right values, while simultaneously engaging
+the customer in natural language conversation.There are three reasons that make carrying out
+a series of actions more difﬁcult than the task lets
+on. To start, the permitted actions in a given state
+are determined not only by Agent Guidelines, but
+also by the user’s desire, which may be in conﬂict.
+For example, the customer in Figure 1 wanted to
+extend their subscription, but the guidelines pre-
+vented the agent from doing so. Secondly, actions
+must be completed in order. This procedural re-
+quirement comes from the realization that com-
+pleting actions out of order (or with missing steps)
+do not make sense in many real-world scenarios.
+For example, it is critical to [Verify Identity] be-
+fore resetting someone’s password, not after. Fi-
+nally, actions themselves induce stochastic out-
+comes, preventing agents from memorizing pat-
+terns of subﬂow resolution. As an example, [Ask
+the Oracle] often determines if a customer com-
+plaint was valid. In the case of a company error,
+the agent is compelled to immediately resolve the
+issue, whereas a misunderstanding made by the
+customer warrants a different set of responses.

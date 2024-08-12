@@ -1,0 +1,69 @@
+1 Introduction
+Depth estimation is a fundamental task with many applications ranging from
+robotics, 3D reconstruction, and augmented/virtual reality to autonomous ve-
+hicles. Accurate, prompt, and high-resolution depth information is crucial for
+most of these tasks, but obtaining it remains an open challenge. Among the
+many possibilities, depth-from-stereo is one of the longest-standing approachesarXiv:2408.04633v1  [cs.CV]  8 Aug 20242 L. Bartolomei et al.
+to deal with it, with a large literature of deep architecture [51] proposed in the
+last decade for processing rectified color images.
+Eventcameras[18](orneuromorphiccameras)arerecentlyemergingasanal-
+ternative to overcome thelimitationsof traditionalimagingdevices, suchas their
+low dynamic range or the motion blur caused by fast movements. Unlike their
+traditional counterparts, event cameras do not capture frames at synchronous
+intervals. Instead, they mimic the dynamic nature of human vision by reporting
+pixel intensity changes, which can have positiveornegative polarities, as soon as
+they happen. This peculiarity endows them with unparalleled features – notably
+microsecond temporal resolution, and an exceptionally high dynamic range –
+making them perfectly suited for applications where fast motion and challeng-
+ing light conditions are persistent issues ( e.g. autonomous driving). The events
+streams are often encoded in W ×H×C tensors, thus being fully compatible with
+the CNNs used for classical stereo [43], capable of estimating dense disparity
+maps driven by data, despite the sparse nature of events.
+However, as the events trigger only with brightness changes any derived data
+issemi-dense and uninformative, for instance, when facing large untextured
+regions or in the absence of any motion – e.g., as in the example in Fig. 1. This
+makes the downstream stereo network struggle to match events across left and
+right cameras, as shown in Fig. 1 (a). According to the RGB stereo literature,
+fusing color information with sparse depth measurements from an active sensor
+[4,12,49,82]( e.g.,aLiDAR)considerablysoftenstheweaknessesofpassivedepth
+sensing, despite the much lower resolution at which depth points are provided.
+We argue that such a strategy would counter the aforementioned issues even if
+applied to the event stereo paradigm, yet with a notable nodus caused by the
+fixed rate at which depth sensors work – usually, 10Hz for LiDARs – being in
+contrast with the asynchronous acquisition rate of event cameras. This would
+cause to either i) use depth points only when available, harming the accuracy of
+most fusion strategies known from the classical stereo literature [12,49,82], or ii)
+limiting processing to the LiDAR pace, nullifying one of the greatest strength of
+event cameras – i.e., microseconds resolution. Nonetheless, this track on event
+stereo/active sensors fusion has remained unexplored so far.
+In this paper, starting from the RGB literature [4,12,49,82], we embark on
+a comprehensive investigation into the fusion of event-based stereo with sparse
+depth hints from active sensors. Inspired by [4], which projects distinctive color
+patterns on the images consistently with measured depth, we design a halluci-
+nation mechanism to generate fictitious events over time to densify the stream
+collected by the event cameras. Purposely, we propose two different strategies,
+respectively consisting of i) creating distinctive patterns directly at the stack
+level, i.e. a Virtual Stack Hallucination (VSH), just before the deep net-
+work processing, or ii) generating raw events directly in the stream, starting
+from the time instant tdfor which we aim to estimate a disparity map and
+performing Back-in-Time Hallucination (BTH). Both strategies, despite the
+different constraints – VSH requires explicit access to the stacked representation,
+whereas BTH does not – dramatically improve the accuracy of pure event-basedLiDAR-Event Stereo Fusion 3
+stereo systems, overcoming some of their harshest limitations as shown in Fig.
+1 (c,d). Furthermore, despite depth sensors having a fixed acquisition rate that
+is in contrast with the asynchronous capture rate of event cameras, VSH and
+BTH can leverage depth measurements not synchronized with td(thus collected
+attz< td) with marginal drops in accuracy compared to the case of perfectly
+synchronized depth and event sensors ( tz=td). This strategy allows for exploit-
+ing both VSH and BTH while preserving the microsecond resolution peculiar of
+event cameras. Exhaustive experiments support the following claims:
+–We prove that LiDAR-stereo fusion frameworks can effectively be adapted
+to the event stereo domain
+–Our VSH and BTH frameworks are general and work effectively with any
+structured representation among the eight we surveyed
+–Our strategies outperform existing alternatives inherited from RGB stereo
+literature on DSEC [21] and M3ED [9] datasets
+–VSH and BTH can exploit even outdated LiDAR data to increase the event
+stream distinctiveness and ease matching, preserving the microsecond reso-
+lution of event cameras and eliminating the need for synchronous processing
+dictated by the constant framerate of the depth sensor

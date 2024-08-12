@@ -1,0 +1,91 @@
+7 Conclusion
+By comparing the results on four representative
+languages on three downstream tasks, we demon-
+strated the challenges faced in applying natural lan-
+guage processing techniques to ancient logographic
+writing systems. Our experiments demonstrate,
+however, that encoding more readily available vi-
+sual representations of language artifacts can be
+a successful strategy for downstream processing
+tasks.8 Limitations
+More discussion on ancient logographic lan-
+guages. Due to page limits, we do not discuss an-
+cient logographic languages in a critical way. Tech-
+nically, there are no logographic languages, only
+languages written in logographic writing systems
+(aka logography ) (Gorman and Sproat, 2023). In
+this paper, we use the term “logographic languages”
+to denote languages that are quite different from
+those with alphabetic writing systems especially
+when we tried to apply NLP toolkits for compu-
+tational paleography. As mentioned in the related
+work section, these languages feature glyphs that
+have multiple transliterations or functional uses. In
+other words, these languages are homophonous or
+a glyph can be used as a phonetic value or semantic
+value. Therefore, the boundaries between logo-
+graphic and phonographic is not sharply separated.
+Including more logographic writing systems.
+We selected the four languages because we would
+like to include at least one language from early civ-
+ilization in Ancient China, Ancient Egypt, Indus
+Valley Civilization, Mesoamerica, Mesopotamia
+and Minoan Civilization (Woodard, 2004). How-
+ever, we fail to include Mayan hieroglyphs
+(Mesoamerica) and Oracle Bone script. However,
+Mayan is excluded because the collection12is still
+working in process. Oracle Bone script is primarily
+omitted due to copyright issues.
+Textline images. Most ancient languages remain
+as full-document images. In this paper, we use dig-
+itally rendered text as a surrogate visual feature for
+Akkadian. In reality, much of Cuneiform data is
+still in hand copies or in photo format. In the future,
+we look to conduct apples-to-apples comparisons
+for all languages once the line segmentation anno-
+tations become available.
+Annotation quality and quantity. The study
+of ancient languages is constantly evolving; hu-
+manities scholars have not agreed on explanations,
+transliterations, or even the distinctions between
+certain glyphs or periods. We try our best to care-
+fully annotated the data without bias; however, fu-
+ture editions of the benchmark are needed as things
+change all the time. A collective platform to cor-
+rect errors and make more data available should be
+considered for future development.
+12The Maya Hieroglyphic Text and Image Archive:
+https://digitale-sammlungen.ulb.uni-bonn.
+de/mayaLabel imbalance. The classification task in our
+benchmark is label imbalanced. This is known
+to be a major issue for all machine learning tasks
+related to the ancient world (Sommerschield et al.,
+2023; Chen et al., 2024).
+Acknowledgements
+We thank Professor Wenbo Chen from the Depart-
+ment of Humanities at Central South University,
+China, for his advice on Old Chinese data collec-
+tion and explanation. We thank Professor Edward
+Kelting from the Department of Literature at UC
+San Diego for his advice on Ancient Egyptian data
+collection and explanation. We thank Jerry You
+from http://www.ccamc.org/ for his help
+on Unicode and data processing for ancient lan-
+guages.
+We thank Elizabeth Salesky for her guidance in
+setting up cross-lingual machine translation experi-
+ments for ancient languages using both PIXEL and
+BPE encoders. We thank Chenghao Xiao for the
+help setting up the PIXEL + GPT 2 experiment.
+We thank Kyle Gorman, Alexander Gutkin and
+Richard Sproat for their inspiring work (Sproat and
+Gutkin, 2021; Gorman and Sproat, 2023), which
+has significantly contributed to our understanding
+of logographic writing systems from a computa-
+tional perspective.
+We thank Nikita Srivatsan, Nikolai V ogler, Ke
+Chen, Daniel Spokoyny, David Smith, and the
+anonymous ARR reviewers for their insightful feed-
+back on the paper draft. This work was partially
+supported by the NSF under grants 2146151 and
+2200333.

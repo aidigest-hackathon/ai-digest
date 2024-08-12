@@ -1,0 +1,14 @@
+6 Conclusion
+We have introduced Puppet-Master, a model that can synthesize nuanced part-level motion in the
+form of a video, conditioned on sparse motion trajectories or drags. Fine-tuned from a large-scale
+pre-trained video generator on a carefully curated synthetic part-level motion dataset Objaverse-
+Animation-HQ, which we have contributed, our model demonstrates excellent zero-shot generalization
+to real-world cases. Thanks to the proposed adaptive layer normalization modules, the cross-attention
+modules with drag tokens and, perhaps more importantly, the all-to-first spatial attention modules, we
+have shown superior results compared to previous works on multiple benchmarks. Ablation studies
+verify the importance of the various components that contributed to this improvement.
+Acknowledgments. This work is in part supported by a Toshiba Research Studentship, EPSRC
+SYN3D EP/Z001811/1, and ERC-CoG UNION 101001212. We thank Luke Melas-Kyriazi, Jinghao
+Zhou, Minghao Chen and Junyu Xie for useful discussions, Dejia Xu for sharing his experience
+developing CamCo [ 74], and RigManic, Inc. for providing the OpenAI credits essential for our
+research.

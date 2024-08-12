@@ -1,0 +1,17 @@
+We present Puppet-Master, an interactive video generative model that can serve as
+a motion prior for part-level dynamics. At test time, given a single image and a
+sparse set of motion trajectories ( i.e.,drags ), Puppet-Master can synthesize a video
+depicting realistic part-level motion faithful to the given drag interactions. This is
+achieved by fine-tuning a large-scale pre-trained video diffusion model, for which
+we propose a new conditioning architecture to inject the dragging control effectively.
+More importantly, we introduce the all-to-first attention mechanism, a drop-in
+replacement for the widely adopted spatial attention modules, which significantly
+improves generation quality by addressing the appearance and background issues
+in existing models. Unlike other motion-conditioned video generators that are
+trained on in-the-wild videos and mostly move an entire object, Puppet-Master is
+learned from Objaverse-Animation-HQ, a new dataset of curated part-level motion
+clips. We propose a strategy to automatically filter out sub-optimal animations
+and augment the synthetic renderings with meaningful motion trajectories. Puppet-
+Master generalizes well to real images across various categories and outperforms
+existing methods in a zero-shot manner on a real-world benchmark. See our project
+page for more results: vgg-puppetmaster.github.io .

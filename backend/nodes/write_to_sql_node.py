@@ -45,7 +45,7 @@ def read_image(image_path: str) -> Union[bytes, None]:
         return None
 
 # Function to insert a state record into the table
-def insert_state(conn: sqlite3.Connection, state: State) -> None:
+def insert_state(conn: sqlite3.Connection, state) -> None:
     sql_insert = """
     INSERT INTO states (date, title, beginner_result, intermediate_result, advanced_result, image, link)
     VALUES (?, ?, ?, ?, ?, ?, ?);

@@ -1,0 +1,88 @@
+1 Introduction
+The broad adoption of virtual assistants and cus-
+tomer service chatbots in recent years has been
+driven in no small part by the usefulness of these
+tools, whereby actions are taken on behalf of the
+user to accomplish their desired targets (Ama-
+zon, 2019; Google, 2019). Research into task-
+oriented dialogue has concurrently made tremen-
+dous progress on natural language understanding
+of user needs (Wu et al., 2019; Rastogi et al.,
+2020b; Liang et al., 2020). However, selecting
+actions in real life requires not only obeying user
+requests, but also following practical policy limi-
+tations which may be at odds with those requests.
+For example, while a user may ask for a refund on
+their purchase, an agent should only honor such a
+request if it is valid with regards to the store’s re-
+turn policy. Described in actions, before an agent
+1All code and data will be available at this location.
+Figure 1: An interaction from ABCD (left) starts with
+the customer receiving a prompt (top right) to ground
+the dialogue. The agent follows the guidelines (bottom
+right) to identify the customer intent and to assist them
+in resolving the issue through a series of actions.
+can[Oﬀer Refund] , they must ﬁrst [Validate Pur-
+chase] . Furthermore, resolving customer issues
+often concerns multiple actions completed in suc-
+cession with a speciﬁc order since prior steps may
+inﬂuence future decision states. (See Figure 1)
+To more closely model real customer service
+agents, we present the Action-Based Conversa-
+tions Dataset (ABCD) consisting of 10,042 con-
+versations containing numerous actions with pre-
+cise procedural requirements. These actions dif-
+fer from typical dialogue acts because tracking
+them necessitates striking a balance between ex-
+ternal user requests and internally-imposed guide-
+lines. Thus, the major difference between
+ABCD and other dialogue datasets, such as Mul-
+tiWOZ (Budzianowski et al., 2018), is that it asks
+the agent to adhere to a set of policies while simul-
+taneously dealing with customer requests.
+While the prevalent data collection paradigm
+involves Wizard-of-Oz techniques, our situationarXiv:2104.00783v1  [cs.CL]  1 Apr 2021containing asymmetric speakers compelled the de-
+sign of a novel Expert Live Chat system. Our
+dataset includes asymmetric speakers because, un-
+like customers, agents must undergo extensive
+training to be able to navigate the Agent Guide-
+lines during real-time conversations. This makes
+a naive pairing process untenable since arbitrary
+matching might lead to chats containing two users
+who share the same role.
+Based on the unique aspects of ABCD, we pro-
+pose two new tasks. To start, Action State Track-
+ing (AST) closely mirrors the format of Dialogue
+State Tracking where the user intent is inferred
+from the dialogue history. AST then differs since
+the correct state must also be reconciled with the
+requirements outlined in the Agent Guidelines. As
+a second task, Cascading Dialogue Success (CDS)
+extends this notion across the entire conversation.
+At each turn, the agent decides to take an action,
+respond with an utterance or end the chat. As
+needed, the agent should also predict the right ac-
+tion or select the best utterance.
+For each task, we build various models to es-
+tablish baseline performance and to highlight the
+importance of each constraint. Experiments show
+that in addition to conversation history, condition-
+ing on the Agent Guidelines further boosts perfor-
+mance, with top models relying on both aspects
+to reach 31.9% accuracy. Additional results show
+removing action context hurts performance, im-
+plying the importance of taking into account the
+sequential nature of actions. Lastly, human eval-
+uation reaches 82.7%, demonstrating ample room
+for future improvement.
+The contribution of this work is three-fold: (1)
+We provide a novel, large-scale dataset containing
+context-dependent, procedural actions along with
+corresponding Agent Guidelines. (2) We establish
+a new technique called Expert Live Chat for cap-
+turing natural dialogue between two unequal inter-
+locutors. (3) We propose two metrics, Action State
+Tracking and Cascading Dialogue Success, for
+measuring dialogue comprehension with policy
+constraints. Finally, we build on pretrained neural
+models to serve as baselines for these tasks.

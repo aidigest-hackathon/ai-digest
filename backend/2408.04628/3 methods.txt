@@ -1,0 +1,109 @@
+3 Methods
+In this section, we will describe feature encoding
+methods (§3.1) for both visual and textual inputs,
+as well as task-specific layers (§3.2) for each task
+we consider.
+3.1 Feature Encoding
+NLP for Low-resource languages has benefitted
+a lot from pre-trained models. However, modern
+pre-trained models do not cover the character in-
+ventories of the considered ancient logographic
+languages. To overcome this shortage, we summa-
+rize solutions to the problem into four categories
+and describe them as follows.
+Extending vocabulary. In this line of approach
+(Wang et al., 2020; Imamura and Sumita, 2022),
+the vocabulary is extended by adding the unseen to-
+kens. The embeddings of new tokens can be either
+initialized randomly or calculated by a function.! #   $ 
+Bamboo script (photo)
+Egyptian hierograph (digital figure)
+Linear A (montage)
+! # $ % & &Linear A (tablet)Cuneiform (digital rendering)Bamboo script (handcopy)
+Not in UnicodeStacking
+U1202d U121a0 U12038 U12197 U12363 U123631. raw image
+2. montage3. renderingconcatenate glyphs in a rowFigure 3: Image features of four ancient writing systems. (1) Egyptian hieroglyphs and Bamboo scripts are already
+manually segmented into images of lines. In the handcopy version of the Bamboo script, the word within parentheses
+indicates the corresponding modern Chinese glyph. Although both the Egyptian and Bamboo script images appear
+to be in a digital font, they are only accessible as images without underlying codepoint mappings to Unicode. (2)
+Linear A tablets are believed to be written in horizontal lines running from left to right (Salgarella, 2020); therefore,
+we use the montage concatenation of each glyph as the representation. (3) We digitally render Cuneiform Unicode
+using computer font as the visual representation.
+In the fine-tuning stage, the embeddings of new
+tokens are updated together with the rest of the
+model.
+Latin transliteration as a proxy. The majority
+of past work on cross-lingual transfer has focused
+on using Latin transliteration as the proxy to trans-
+fer knowledge from high-resource to low-resource
+languages (Pires et al., 2019; Fang et al., 2020).
+Following this line of work, we input latinization
+representations to mBERT (Devlin et al., 2018) to
+obtain the embeddings of the ancient languages.
+Tokenization-free. The idea of the tokenization-
+free approach is to view tokens as a sequence of
+bytes and directly operate on UTF-8 codepoints
+without an extra mapping step. As representa-
+tive models, ByT5 (Xue et al., 2022) and CA-
+NINE (Clark et al., 2022) use Unicode encod-
+ing of a string to resolve the cross-lingual out-of-
+vocabulary issues. This work uses ByT5 for ma-
+chine translation and CANINE for classification.
+Pixel Encoder for Text. Recently, there has been
+a novel approach (Rust et al., 2023) that aims to re-
+solve the disjoint-character-set problem by render-
+ing text into images and then applying a standard
+image encoder, such as the Vision Transformer
+with Masked Autoencoder (ViT-MAE) (He et al.,
+2022), to encode the features. In this work, we use
+PIXEL (Rust et al., 2023), a pixel-based language
+model pre-trained on the Common Crawl dataset
+with a masked image modeling objective, to encode
+the visual text lines for ancient languages. Addi-
+tionally, we use PIXEL-MT (Salesky et al., 2023), a
+pixel-based machine translation model pre-trained
+on 59 languages, for the machine translation task.
+Full Document Image Encoding. When the im-
+ages of ancient artifacts are available (e.g., for Lin-ear A and Cuneiform), we can encode the full-
+document images directly. We use ResNet-50
+(He et al., 2016) as the backbone model for full-
+document image inputs.
+3.2 Task-Specific Layers
+Machine translation. After encoding the input
+to vectors, machine translation requires a decoder
+to generate sequential outputs. Encoder-decoder
+models, such as T5 (Raffel et al., 2020), ByT5,
+PIXEL-MT, and BPE-MT (Salesky et al., 2023),
+use 3/6/12 layers of Transformer blocks as the
+decoders. For Encoder-only models, such as
+(m)BERT or PIXEL, we attach a GPT2 model (Rad-
+ford et al., 2019) as the decoder to produce sequen-
+tial output. Among the aforementioned models, T5,
+ByT5, and PIXEL are pre-trained on large-scale
+text corpora such as the Common Crawl; PIXEL-
+MT and BPE-MT are pre-trained on 1.5M pairs
+of sentences of 59 modern languages; PIXEL-MT
+is an encoder-decoder model with a 6-layer Trans-
+former encoder and a 4-layer Transformer decoder.
+Classification. We attach a two-layer ReLU-
+activated perceptron (MLP) with a hidden size of
+512 to the encoder for all classification tasks. The
+MLP outputs the predicted distribution over the
+candidate classes.
+Dependency Parsing. After encoding, we use
+the deep bi-affine parser (Dozat and Manning,
+2017) for dependency parsing, which assigns a
+score to each possible dependency arc between two
+words. We use the minimum spanning tree (MST)
+algorithm during inference to find the best depen-
+dency tree for each sentence.Task Model BSZ Steps LR
+translation visual 64 30,000 5e-4
+translation textual 56 30,000 5e-4
+translation byT5 64 100,000 1e-3
+classification visual/textual 256 30,000 5e-4
+parsing visual/textual 256 1,000 8e-5
+Table 3: Hyperparameter configuration. Note that,
+byT5 is particularly hard to converge compared to other
+transformer-based models. For the parsing task, due to
+the low-resource nature of the parsing data, 1,000 steps
+are sufficient to achieve model convergence.

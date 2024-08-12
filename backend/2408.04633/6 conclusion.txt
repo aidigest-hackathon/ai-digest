@@ -1,0 +1,22 @@
+6 Conclusion
+This paper proposes a novel framework for implementing event stereo and Li-
+DAR fusion. It works by hallucinating fictitious events either in the stacked
+representation processed by stereo backbones or the continuous streams sensed
+by event cameras, easing the matching process to the downstream stereo model
+estimating disparity. Our exhaustive experiments prove that our solutions, VSH
+and BTH, dramatically outperform alternative fusion strategies from the RGB
+stereo literature, retaining the microsecond resolution typical of event cameras
+despite the discrete frame rate of LiDARs and depth sensors in general.
+Limitations. Despite the robustness shown with misaligned LiDAR data, a
+marginal drop in accuracy compared to the case of having LiDAR measurements
+at the very same timestamp at which we aim to infer disparity maps occurs.
+Future work will focus on studying new design mechanisms to deal with it.LiDAR-Event Stereo Fusion 15
+Acknowledgement. This study was carried out within the MOST – Sus-
+tainable Mobility National Research Center and received funding from the Eu-
+ropean Union Next-GenerationEU – PIANO NAZIONALE DI RIPRESA E RE-
+SILIENZA (PNRR) – MISSIONE 4 COMPONENTE 2, INVESTIMENTO 1.4 –
+D.D. 1033 17/06/2022, CN00000023. This manuscript reflects only the authors’
+views and opinions, neither the European Union nor the European Commission
+can be considered responsible for them.
+We acknowledge the CINECA award under the ISCRA initiative, for the
+availability of high-performance computing resources and support.

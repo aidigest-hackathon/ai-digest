@@ -1,0 +1,164 @@
+4 Experiments: RAG Tuning
+To illustrate the usage and usefulness of the
+RAG F OUNDRY library, we experiment with sev-
+eral possible RAG improvements to LLMs, and
+evaluate the results on three knowledge-intensive
+tasks.
+4.1 RAG Augmentation Techniques
+We explore several techniques for RAG augmenta-
+tion, and use RAG F OUNDRY to easily implement
+and evaluate their benefit. As an initial step, we
+evaluate unmodified models; we set Baseline as a
+configuration that is defined by running unmodified
+models and without any external knowledge. We
+define a RAG setting that introduces top-relevant
+documents in a consistent prompt template format
+with a system instruction, and a CoT scheme whichguides the model to use the retrieved context, ex-
+plain the steps, quote relevant parts and produce
+a final answer. Complementing that, we explore
+fine-tuning recipes. We fine-tune the model in the
+RAG setup and denote is as RAG-sft . To comple-
+ment CoT , we implemented a fine-tuning recipe,
+denoted as CoT-sft , introduced in (Zhang et al.,
+2024), where gold documents and purely distractor
+documents are used in the prompt, determined by
+probability, in conjunction with a CoT prompt. All
+prompt templates are included in appendix A.1.
+4.2 Datasets
+We evaluate our models on TriviaQA (Joshi et al.,
+2017), PubmedQA (Jin et al., 2019), and ASQA
+(Stelmakh et al., 2022) which are knowledge in-
+tensive question-answering datasets which ben-
+efit from external sources. The TriviaQA and
+PubmedQA datasets contain relevant context; for
+ASQA, retrieval was done over a Wikipedia corpus
+using a dense retriever4. Dataset sources and sizes
+are included in appendix A.2.
+4.3 Models
+We experiment with two representative models:
+Llama-35(Touvron et al., 2023; AI@Meta, 2024)
+and Phi-36(Abdin et al., 2024) as they represent
+robust capabilities and are ideal candidate models
+for RAG use case deployments.
+4.4 Evaluation
+We measure and report Exact Match (EM) for
+TriviaQA , STR-EM for ASQA, accuracy and F1
+for PubmedQA. Additionally, we evaluate two
+RAGAS metrics (Es et al., 2024): Faithfulness and
+Relevancy. Faithfulness measures the relation be-
+tween the generated text and the context. Relevancy
+measures the relation between the generated text
+and the query. These two metrics use the context as
+input for the LLM critic, so are only relevant in the
+RAG settings. The critic LLM used is GPT4-32k,
+version 0613. An embedder7is required for the
+relevancy evaluation.
+4.5 Results
+We present a comparative study of RAG augmenta-
+tion techniques, on the TriviaQA, ASQA and Pub-
+medQA datasets. Results are presented in table 1:
+4BAAI/llm-embedder
+5meta-llama/Meta-Llama-3-8B-Instruct.
+6microsoft/Phi-3-mini-128k-instruct.
+7BAAI/bge-small-en-v1.5.Model Method TriviaQA ASQA PubmedQA
+EM Faith. Rel. STR-EM Faith. Rel. Acc F1 Faith. Rel.
+Phi-3 3.8BBaseline 0.630 - - 0.109 - - 0.476 0.290 - -
+RAG 0.876 0.821 0.836 0.294 0.685 0.895 0.530 0.281 - -
+RAG-sft 0.878 0.777 0.750 0.252 0.717 0.833 0.720 0.491 - -
+CoT 0.923 0.555 0.741 0.367 0.263 0.826 0.574 0.439 0.477 0.705
+CoT-sft 0.795 0.793 0.749 0.386 0.749 0.839 0.620 0.458 0.631 0.853
+Llama-3 8BBaseline 0.722 - - 0.200 - - 0.560 0.366 - -
+RAG 0.828 0.783 0.746 0.285 0.610 0.861 0.556 0.398 - -
+RAG-sft 0.916 0.704 0.714 0.291 0.653 0.854 0.770 0.537 - -
+CoT 0.896 0.518 0.764 0.395 0.536 0.730 0.684 0.480 0.378 0.732
+CoT-sft 0.851 0.808 0.697 0.422 0.768 0.790 0.694 0.485 0.777 0.883
+Table 1: Evaluation results of baseline and different RAG settings, for the three datasets and two models tested. In
+addition to the main metrics for each dataset, faithfulness and relevancy are reported for the relevant configurations.
+In bold are the best configurations per dataset, based on the main metrics.
+main metrics for each dataset are displayed, as well
+as faithfulness and relevancy scores, as defined in
+(Es et al., 2024). For TriviaQA we observe the
+following: retrieved context improves the results,
+fine-tuning the RAG setting improves the results,
+fine-tuning on CoT reasoning (which includes train-
+ing on a combination of gold passages and distrac-
+tor passages) decreases performance. Best method
+is model dependent for this dataset. For ASQA,
+we similarly observe every method improves upon
+the baseline, CoT reasoning produces consistent
+improvement in both models, as well as fine-tuning
+of the CoT configuration, which shows to perform
+best. Finally, for PubmedQA, we observe that al-
+most all methods improve upon the baseline (with
+one exception); CoT reasoning improves upon the
+untrained RAG setting, but upon fine-tuning, the
+RAG method appears to perform best in both mod-
+els.
+Inspecting the faithfulness and relevancy scores,
+notice that not all configurations are valid to be
+measured: these metrics require context, so are
+irrelevant for the baseline method. Additionally,
+in the PubmedQA dataset, the answers are binary
+Yes/No; only in the CoT configurations the LLMs
+produce a reasoning, which can be evaluated. Fi-
+nally, the faithfulness and relevancy scores often
+do not correlate with the main metrics, neither with
+each other, possibly indicating they capture differ-
+ent aspects of the retrieval and generated results,
+and represent a trade-off in performance.
+The results demonstrate the usefulness of RAG
+techniques for improving performance, as well as
+the need to carefully evaluate different aspects of a
+RAG system, on a diverse set of datasets, as effort
+on developing generalized techniques is ongoing.5 Conclusion
+We introduced RAG F OUNDRY , an open-source
+library dedicated to the task of RAG-augmentation
+of LLMs, namely fine-tuning LLMs to become bet-
+ter at RAG settings. The library is designed to serve
+as an end-to-end experimentation environment, en-
+abling users to quickly prototype and experiment
+with different RAG techniques. We demonstrated
+the usefulness of the library by augmenting two
+models with RAG configurations, evaluating on
+three Q&A datasets and showing the benefit of
+RAG techniques, as well as of using multi-aspect
+metrics relevant for RAG systems evaluation.
+Limitations and Future Plans
+Our hope is that the library will be useful to as
+many people and use-cases as possible. However,
+due to time and resource constraint, we were able to
+demonstrate its usefulness on a subset of tasks and
+datasets. Future work can expand the evaluation
+to other tasks, as well as implementing other RAG
+techniques and evaluations.
+Although we designed the library to be general
+and customizable, there might be specific work-
+flows which will be difficult to run as-is and some
+code changes may be required. The library proved
+useful for our own research projects on a diverse
+set of datasets and tasks and extending it is easy
+and straightforward.
+Finally, despite our best efforts to offer detailed
+documentation in the library, there could be some
+missing details regarding some functionality or spe-
+cific use-cases. The code repository will accept
+suggestions, bug-fixes and pull requests.Ethics Statement
+In conducting our research we strive abiding to
+the highest ethical standards, including integrity,
+fairness, and societal benefit of our work. We pri-
+oritized data privacy and security throughout our
+research; any data used in our experiments was
+publicly available and did not contain any private
+information. We are committed to the principles of
+transparency and reproducibility; the methodolo-
+gies, including data pre-processing, model training,
+and evaluation are documented in order to enable
+others to replicate our findings. Code is made avail-
+able in an open repository. We advocate for the
+responsible use of LLMs and RAG augmentation.
+It is essential to exercise caution and verify the ac-
+curacy and reliability of generated text produced by
+LLMs. Hallucinations can have negative implica-
+tions, and even when RAG methods can ameliorate
+some of these aspects, verification and inspections
+are needed.

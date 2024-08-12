@@ -1,0 +1,238 @@
+3 RAG Foundry
+TheRAG F OUNDRY framework facilitates rapid
+prototyping and experimentation with various RAG
+settings and configurations. The library is com-
+posed of four modules: dataset creation, training,name: my_pipeline
+cache: true
+steps:
+- _target_: dataset_loaders.loaders.HFLoader
+inputs: main
+dataset_config:
+path: "Tevatron/wikipedia-trivia"
+split: train
+- _target_: dataset_loaders.loaders.LocalLoader
+inputs: fewshot-data
+filename: prepared-fewshot-data.jsonl
+- _target_: global_steps.sampling.ShuffleSelect
+inputs: main
+shuffle: 42
+limit: 10000
+- _target_:
+local_steps.retrievers.HaystackRetriever ,→
+inputs: main
+pipeline_path: configs/qdrant.yaml
+query_key: query
+docs_key: positive_passages
+- _target_: global_steps.sampling.FewShot
+inputs: main
+input_dataset: fewshot-data
+k:3
+output_key: fewshot_examples
+- _target_: local_steps.prompter.TextPrompter
+inputs: main
+prompt_file: prompts/basic.txt
+output_key: my_prompt
+mapping:
+question: query
+context: positive_passages
+fewshot: fewshot_examples
+answer: answers
+- _target_: global_steps.output.OutputData
+inputs: main
+file_name: TQA_train_processed.jsonl
+Listing 1: Example of a dataset creation configuration.
+The example contains data loading, shuffling, sampling,
+retrieval, few-shot collection, prompt building and sav-
+ing steps.
+inference, and evaluation. Below, we expand on
+each of the modules and provide example configu-
+rations for running them.
+3.1 Data Creation and Processing
+Theprocessing module facilitates the creation of
+context-enhanced datasets by persisting RAG in-
+teractions, which are essential for RAG-oriented
+training and inference (Berchansky et al., 2024; Liu
+et al., 2024; Yu et al., 2024b). These interactions
+encompass dataset loading, column normalization,
+data aggregation, information retrieval, template-
+based prompt creation, and various other forms ofpre-processing. The processed data can be saved
+in a consistent, model-independent format, along
+with all associated metadata, ensuring compatibil-
+ity and reproducibility across different models and
+experiments.
+The processing module is comprised of an ab-
+stract pipeline with multiple steps, each defined by
+Python classes that implement specific data pro-
+cessing functionalities. These steps are categorized
+into two types:
+•Global Steps : Can act on the dataset as a whole,
+making them useful for operations such as aggre-
+gations, group-by, examples filtering, join opera-
+tions, and more.
+•Local Steps : Operate on individual examples,
+making them suitable for tasks such as retrieval,
+text processing, and field manipulation.
+The modular design allows for building flexible
+and efficient data processes, tailored to the needs
+of RAG-oriented training and inference. Steps can
+be categorized into the following non-exclusive
+categories:
+•Loaders : Load datasets from the Hugging Face1
+hub or from local sources.
+•Selectors : Filter examples, shuffle datasets, and
+select subset datasets.
+•Retrievers : Integrate information from external
+databases, tools, libraries and pipelines.
+•Samplers : Collect random examples or features
+from any dataset to compile few-shot or negative
+examples.
+•Prompters : Format prompts using custom tem-
+plates and keyword mappings.
+The processing module supports the handling of
+multiple datasets at once, through global dataset
+sharing. This feature allows each step of the
+pipeline to access any of the loaded datasets, en-
+hancing flexibility and allowing for complex pro-
+cessing procedures. Furthermore, the module in-
+cludes step caching , which caches each pipeline
+step locally. This improves compute efficiency, and
+facilitates easy reproduction of results.
+3.1.1 Example: Enhancing a Q&A Dataset
+To showcase the effectiveness of the process-
+ing module, we demonstrate how to enrich a
+question-answering dataset with external informa-
+1https://huggingface.co/model:
+_target_: ragfoundry.models.hf.HFTrain
+model_name_or_path:
+"microsoft/Phi-3-mini-128k-instruct" ,→
+load_in_8bit: true
+lora:
+peft_type: "LORA"
+r:16
+target_modules: [ "qkv_proj" ]
+completion_start: "<|assistant|>"
+train:
+gradient_accumulation_steps: 4
+learning_rate: 2e-05
+lr_scheduler_type: "cosine"
+num_train_epochs: 1
+optim: "paged_adamw_8bit"
+instruction: prompts/prompt_instructions/qa.txt
+data_file: TQA_train_processed.jsonl
+Listing 2: Example of a training configuration. Model
+and training parameters are specified, in addition to an
+instruction file containing the system prompt.
+tion fetched using a retrieval pipeline, prepare few-
+shot examples and combine everything together
+using a prompt template. Listing 1 demonstrates
+how such a processing pipeline is defined using a
+YAML configuration. The main structure of the file
+is a list of steps, each defined by a _target_ which
+points to the step implementation. Each step has
+inputs , which is a name or list of dataset names
+to act upon. Other keys in a step relate to specific
+step logic.
+The first two steps in listing 1 load datasets from
+Hugging Face hub and from a local path. The third
+step shuffles and selects 10k examples from the
+main dataset. The forth step runs a Haystack-based
+(Pietsch et al., 2019) retrieval pipeline to retrieve
+relevant passages using questions from the loaded
+dataset as queries, storing them in docs_key . We
+note that different retrieval processes or frame-
+works (Liu, 2022; Chase, 2022; Lin et al., 2021)
+can be used in retrieval steps. The fifth step selects
+3 few-shot examples from the secondary dataset,
+following a prompt generator step that loads a
+prompt template and replaces all given informa-
+tion according to the defined mapping dictionary.
+Lastly, the dataset is saved to a local path.
+3.2 Training
+We provide a training module to fine-tune models
+given the datasets created by the previous process-
+ing module. The training module relies on the
+well established training framework TRL2and sup-
+2https://github.com/huggingface/trlmodel:
+_target_: ragfoundry.models.hf.HFInference
+model_name_or_path:
+"microsoft/Phi-3-mini-128k-instruct" ,→
+load_in_8bit: true
+instruction: prompts/prompt_instructions/qa.txt
+lora_path: /path/to/adapter
+generation:
+do_sample: false
+max_new_tokens: 50
+return_full_text: false
+data_file: my-processed-data.jsnol
+generated_file: model-predictions.jsonl
+Listing 3: Example of an inference configuration. In ad-
+dition to model and generation options, a system prompt
+can be defined.
+ports advanced and efficient training techniques,
+e.g. LoRA (Hu et al., 2021). An example of a
+training configuration is presented in listing 2.
+3.3 Inference
+Theinference module generates predictions given
+the processed datasets created by the processing
+module. Inference is conceptually separated from
+the evaluation step, since it is more computation-
+ally demanding than evaluation. Additionally, one
+can run multiple evaluations on a single, prepared
+inference results file. An example configuration for
+generating predictions given a dataset is presented
+in listing 3.
+3.4 Evaluation
+The goal of the framework is augmenting LLMs
+for RAG. The evaluation module allows users to
+run collections of metrics to evaluate RAG tech-
+niques and tuning processes. The evaluation mod-
+ule loads the output of the inference module and
+runs a configurable list of metrics. Metrics are
+classes implemented in the library. These classes
+can be as simple as wrappers around other evalua-
+tion libraries, or can be implemented by the user.
+Local metrics can be run on individual examples,
+like Exact Match (EM), while Global metrics run
+on the entire dataset as a whole, e.g. Recall (for
+classification-based metrics). Metrics can use any
+field and metadata in the dataset, not just the input-
+output pairs. Some of the metrics implemented
+in the library include: a wrapper for the Hugging
+Face evaluate library, EM, F1, classification met-
+rics, BERTScore (Zhang et al., 2019), Semantic
+Similarity and a wrapper for DeepEval3(for using
+3https://github.com/confident-ai/deepevalanswer_processor:
+_target_: ragfoundry.processing.RegexAnswer
+capture_pattern: "Answer: (.*)"
+stopping_pattern:
+metrics:
+- _target_: ragfoundry.evaluation.HFEvaluate
+metric_names: [ "rouge" ]
+- _target_: ragfoundry.evaluation.EM
+- _target_: ragfoundry.evaluation.F1
+- _target_: ragfoundry.evaluation.BERTScore
+model: "microsoft/deberta-large-mnli"
+- _target_: ragfoundry.evaluation.Faithfulness
+- _target_: ragfoundry.evaluation.Relevancy
+embeddings: "BAAI/bge-small-en-v1.5"
+results_file: my-evaluation.yaml
+generated_file: model-prediction.jsonl
+data_file: my-processed-data.jsonl
+Listing 4: Example of an evaluation configuration; it
+contains an answer processor, as well as the list of met-
+rics, with optional parameters, to run.
+the RAGAS metrics (Es et al., 2024)). After the
+evaluation is completed, a results file is written to
+disk with the local and global metrics results.
+Furthermore, the evaluation module uses a pro-
+cessing step called an Answer Processor , which
+can implement custom logic and serve many pur-
+poses, including cleaning and aligning outputs; for
+example, using regex, one can isolate answers, re-
+move stop words, chain-of-thought reasoning, de-
+fine a stopping criteria, process citations and attri-
+butions and any other form of processing needed
+for a given evaluation.
+See listing 4 for a configuration example; it con-
+tains an answer processor that extracts an answer
+from an output, and a list of metrics to run.
