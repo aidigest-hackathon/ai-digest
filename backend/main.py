@@ -382,7 +382,9 @@ if __name__ == "__main__":
         with open (f"output_{idx}.txt", "w") as f:
             f.write(output_str)
 
-        print(output_str)
+        # write json to file
+        with open(f"state_{idx}.json", "w") as f:
+            json.dump(new_state, f, indent=4)
     # # upload_to_bucket(new_state)
 
     # new_state
