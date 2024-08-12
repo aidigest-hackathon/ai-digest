@@ -290,7 +290,6 @@ def get_complex_summary():
     state = build_state('2024-08-08')
 
     result = app.invoke(state)
-    print(result)
     return result
 
 class StyleGen:
@@ -361,4 +360,15 @@ def upload_to_bucket(state):
 
 if __name__ == "__main__":
     new_state = driver()
+    # breakpoint()
+    output_str = ""
+    output_str+=f"Draft Summary: {new_state['draft_summary']}\n"
+    output_str+=f"Beginner Summary: {new_state["beginner_result"]}\n"
+    output_str+=f"Intermediate Summary: {new_state["intermediate_result"]}\n"
+    output_str+=f"Advanced Summary: {new_state["advanced_result"]}\n"
+    
+    with open ("output.txt", "w") as f:
+        f.write(output_str)
+
+    print(output_str)
     # upload_to_bucket(new_state)

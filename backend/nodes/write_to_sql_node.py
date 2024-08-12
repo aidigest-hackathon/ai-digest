@@ -2,7 +2,6 @@ import sqlite3
 from sqlite3 import Error
 from typing import TypedDict, Union, Optional
 
-
 # Function to create a database connection
 def create_connection(db_file: str) -> sqlite3.Connection:
     conn = None
