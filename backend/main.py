@@ -87,6 +87,20 @@ def get_paper_info(date_str)->list:
 
     return papers_info
 
+from langchain_community.document_loaders import WebBaseLoader, PyPDFLoader
+
+
+def fetch_research_content(paper_url: str, 
+                           ) -> str:
+    """
+    Fetch the research content from the path
+    """
+
+    loader = WebBaseLoader(paper_url)
+    research_text = loader.load()
+    
+    return '\n'.join([i.page_content for i in research_text])
+
 class Result(BaseModel):
     missing_entities: list[str]
     summary: str 
@@ -96,20 +110,17 @@ def build_state(date:str):
 
     state = {}
     
-    research_papers = get_paper_info(date) # returns a list of dict with pdf_link and title
+    # research_papers = get_paper_info(date) # returns a list of dict with pdf_link and title
+    research_papers = [{'pdf_link': '/ai-digest/backend/documents/2022 PACIFIC Tabular Dataset.pdf'}, {'pdf_title': 'backend/documents/2212.10060.pdf'}]
 
-#     "research_paper": """Abstract
-# The dominant sequence transduction models are based on complex recurrent or convolutional neural networks that include an encoder and a decoder. The best performing models also connect the encoder and decoder through an attention mechanism. We propose a new simple network architecture, the Transformer, based solely on attention mechanisms, dispensing with recurrence and convolutions entirely. Experiments on two machine translation tasks show these models to be superior in quality while being more parallelizable and requiring significantly less time to train. Our model achieves 28.4 BLEU on the WMT 2014 English-to-German translation task, improving over the existing best results, including ensembles, by over 2 BLEU. On the WMT 2014 English-to-French translation task, our model establishes a new single-model state-of-the-art BLEU score of 41.8 after training for 3.5 days on eight GPUs, a small fraction of the training costs of the best models from the literature. We show that the Transformer generalizes well to other tasks by applying it successfully to English constituency parsing both with large and limited training data.
-
-# ...
-# """,
-#         "draft_summary": "",  # Initialize with an empty string
-#         "keep_refining": True,  # Initialize as should continue 
-#         "entities": [],  # Initialize with an empty list
-        # "draft_version"
     
-    for research_paper in research_papers:
-        parsed_paper = workflow(research_paper['pdf_link']) # returns a list of strings
+    for research_paper in research_papers[:1]:
+        # parsed_paper = workflow(research_paper['pdf_link']) # returns a list of strings
+        parsed_paper = []
+        for file in os.listdir('2408.04632'):
+            if file.endswith('.txt'):
+                with open(os.path.join('2408.04632', file), 'r') as f:
+                    parsed_paper.append(f.read())
 
         state['research_paper'] = parsed_paper
         state['draft_summary'] = ""
@@ -211,8 +222,6 @@ _Output_'''
         return state 
 
 
-
-
 # Define the nodes
 def draft_summary(state: SummaryState) -> SummaryState:
     # Simulate drafting a summary
@@ -232,12 +241,12 @@ def evaluate_summary(state: SummaryState) -> SummaryState:
     #evaluation = f"Evaluation of: {state['refined_summary']}"
     new_state = state.copy()
     new_state['keep_refining'] = keep_refining   
-    breakpoint() 
+   
     return new_state
 
 
 def should_continue(state: SummaryState):
-    breakpoint()
+  
     is_continue = state['keep_refining']
     if is_continue:
         return "refine"
@@ -269,18 +278,6 @@ def get_complex_summary():
     state = build_state('2024-08-08')
 
     result = app.invoke(state)
-        # Run the graph
-#     result = app.invoke({
-#         "research_paper": """Abstract
-# The dominant sequence transduction models are based on complex recurrent or convolutional neural networks that include an encoder and a decoder. The best performing models also connect the encoder and decoder through an attention mechanism. We propose a new simple network architecture, the Transformer, based solely on attention mechanisms, dispensing with recurrence and convolutions entirely. Experiments on two machine translation tasks show these models to be superior in quality while being more parallelizable and requiring significantly less time to train. Our model achieves 28.4 BLEU on the WMT 2014 English-to-German translation task, improving over the existing best results, including ensembles, by over 2 BLEU. On the WMT 2014 English-to-French translation task, our model establishes a new single-model state-of-the-art BLEU score of 41.8 after training for 3.5 days on eight GPUs, a small fraction of the training costs of the best models from the literature. We show that the Transformer generalizes well to other tasks by applying it successfully to English constituency parsing both with large and limited training data.
-
-# ...
-# """,
-#         "draft_summary": "",  # Initialize with an empty string
-#         "keep_refining": True,  # Initialize as should continue 
-#         "entities": [],  # Initialize with an empty list
-#         "draft_version": 0  # Initialize as 0
-#     })
     print(result)
     return result
 

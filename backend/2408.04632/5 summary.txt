@@ -1,0 +1,45 @@
+5 Summary
+We have introduced the Arctic-TILT model, which
+addresses TILT’s limitations in handling multi-
+modal input, suboptimal training procedure, and
+maximum context length. By analyzing the results
+and considering the cost-efficiency of the designed
+solution, we provided practical insights into design-
+ing capable, lightweight models for the industry. In
+particular, we:
+•established state-of-the-art performance on seven
+benchmarks demanding text, vision, and layout
+comprehension;
+•demonstrated that within the industrial applica-
+tions setting and while keeping the parameter
+count below 1B, one could achieve performance
+better or comparable to vastly larger LLMs and
+LVLMs;
+•presented a novel modality fusion mechanism
+inspired by tensor product representations, and
+have shown how effectively apply it across the
+transformer encoder;
+•demonstrated how, with well-designed attention
+sparsity patterns and numerous other optimiza-
+tions, consume extensive input sequences dur-
+ing training and inference, given a single cost-
+efficient GPU, while maintaining competitive ac-
+curacy of the model;
+•provided insights that can be applied to design
+future generations of multimodal models, partic-
+ularly for visually-rich document processing.
+Our work illustrates that strategic design and opti-
+mization can rival the capabilities of larger, more
+resource-intensive models.
+Acknowledgements
+We express our sincere gratitude to Tomasz Dwo-
+jak and Daniel Campos for their feedback on the
+manuscript and suggestions that have greatly en-
+hanced the quality of this work. We also extend our
+thanks to Łukasz Słabinski, Michał Gdak, Tomasz
+the average target length of evaluation datasets mentioned in
+Section 4.1.Stanisławek, Nikolai Scholz, and Vivek Raghu-
+nathan, whose support and guidance as managers
+have been helpful throughout this research. Finally,
+we thank Rafał Kobiela for his assistance with the
+cloud infrastructure.

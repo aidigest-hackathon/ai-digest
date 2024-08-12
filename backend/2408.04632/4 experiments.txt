@@ -1,0 +1,277 @@
+4 Experiments
+We start by examining diverse benchmarks in the
+Document Understanding field, focusing on these
+closer to enterprise applications due to the domain
+of the included documents and the presence of
+multi-page inputs that systems encounter in real-
+world applications (see Table 3).
+Hyperparameters used during finetuning were
+subject to optimization outlined in Appendix C.
+4.1 Document Visual QA and KIE
+Regarding the model’s intended use for processing
+unstructured documents, Document Visual Ques-
+tion Answering and Key Information Extraction
+tasks appear best suited for assessing performance.
+Multi-page. Arctic-TILT excels when input is a
+long, business document. In the case of DUDE
+(Van Landeghem et al., 2023) consisting of PDFs
+of up to 25 pages, sourced across industries, we
+outperform GPT-4 Vision Turbo by 4 points and
+Gemini 1.5 Pro by 12 points. Qualitatively, Arctic-
+TILT not only outperforms GPT-4Vt in handling
+non-answerable questions but also exceeds state-of-
+the-art models in list and abstractive analysis tasks,
+an example showing complex data handling skills.
+Similarly, we establish state-of-the-art perfor-
+mance on MP-DocVQA (Tito et al., 2023) dataset
+Table 1PageArctic-TILT (MP)GRAM (MP)Arctic-TILT (SlideVQA)Arctic-TILT (MMLong)32K + OCR1 - 577,178,257,226,66 - 1072,974,455,321,411 - 1569,769,652,618,916 - 2072,677,250,322,221 - 3016,531 - 4014,241 - 5018,4-5013,3MethodANLSAccuracyPage 0Page 1TILT ﬁnetuned optuna 30,812250,78700,86390,7967GRAM0,803219,98410,83800,7854
+1-526.66-1021.411-1518.916-2022.221-3016.531-4014.241-5018.450-1000013.3Page
+020406080
+1-56-1011-1516-
+72,669,772,977,1MP-DocVQA
+020406080
+1-56-1011-1516-
+50,352,655,357,2SlideVQA
+0102030
+1-56-1011-1516-2021-3031-4041-5051-
+13,318,414,216,522,218,921,426,6MMLongBench-Doc
+2Figure 5: Scores of Arctic-TILT on MP-DocVQA, Slide-
+VQA, and MMLongBench-Doc, depending on the evi-
+dence location (buckets of five pages).
+consisting of questions posed to industrial docu-
+ments of up to 20 pages, outperforming GRAM
+(Blau et al., 2024) by 1 point. Further, we were
+able to surpass the long-standing score of LAM-
+BERT (Garncarek et al., 2021) on Kleister Charity
+(Stanislawek et al., 2021), with documents reach-
+ing above 300 pages, by 4 points. Similarly, we
+outperform ERNIE-Layout (Peng et al., 2022) on
+Kleister NDA by 6 points.
+Concerning SlideVQA (Tanaka et al., 2023) that
+is based on visually rich presentations of up to 20
+slides, we obtain 2 points less than GPT-4 Vision.
+On recently introduced MMLongBench-Doc (Ma
+et al., 2024) that evaluates zero-shot performance
+on documents as long as 400 pages, we outperform
+vastly larger LLMs: Mixtral 8x7B by 8 points,
+QWen-Plus by 6 points, and LVLMs: Claude-3
+Opus by 9 points, InternVL by 11 points. Better
+performance was attained by models such as Gem-
+ini 1.5 Pro and GPT-4 Vision Omnia, which are
+believed to have hundreds of times more parame-
+ters. Whereas it was the only task considered in
+zero-shot setup, please note Section 4.3 studies how
+the performance of our model improves compared
+to GPT-4o given several annotated documents.
+Finally, given that three of datasets considered
+under this category contain labeled positions of
+answers within documents, we can investigate how
+the model’s performance changes depending on the
+evidence location. The results shown in Figure 5
+indicate the primacy bias , with the highest scores
+achieved when relevant information appears at theDataset Industrial Multipage State-of-the-Art Arctic-TILT
+MP-DocVQA ✓ ✓ GRAM 80.3 81.2
+Kleister Charity ✓ ✓ LAMBERT 83.6 88.1
+Kleister NDA ✓ ✓ ERNIE-Layout 88.1 94.3
+DUDE ✓/✗ ✓ GPT-4Vt + OCR 53.9 58.1
+MMLongBench-Doc†✓/✗ ✓ GPT-4o 42.8 25.8
+SlideVQA ✗ ✓ GPT-4Vt + OCR 57.3 55.1
+ArXiv-Lay ✗ ✓ BigBird-Pegasus+Layout 41.2 44.4
+PubMed-Lay ✗ ✓ BigBird-Pegasus+Layout 42.1 44.8
+DocVQA ✓ ✗ InternVL 2.0 Pro 95.1 90.2
+VQA-CD ✓ ✗ QALayout 42.5 90.7
+InfographicsVQA ✗ ✗ InternVL 2.0 Pro 86.8 57.0
+Table 3: Arctic-TILT compared to the previous state-of-the-art. Our model remains competitive despite having
+less than 1B parameters and excels when input is a long, business document. We use the original metrics for each
+dataset, i.e., F1 for Kleisters, Accuracy for MMLongBench-Doc, EM for SlideVQA, ROUGE-L for ArXiv-Lay and
+PubMed-Lay, and ANLS for the remaining tasks;†denotes zero-shot evaluation.
+beginning of the input (Liu et al., 2024).
+Single-page. In benchmarks involving single-
+page excerpts from multi-page documents or stan-
+dalone images with limited input length, our
+model shows promising results. While Arcitc-
+TILT improved by 2 points over TILT on DocVQA
+(Mathew et al., 2021b) and outperformed GPT-
+4V , it particularly excels in the newly introduced
+VQA-CD dataset, which includes invoices and pur-
+chase orders, establishing state-of-the-art results
+(Souleiman Mahamoud et al., 2022).
+Although there is still a gap compared to
+102B InternVL 2.0 Pro’s performance (Chen
+et al., 2024), especially in non-business Infograph-
+icsVQA (Mathew et al., 2021a), our achievements
+highlight significant advancements in handling
+multi-modal inputs.
+4.2 Layout-Aware Summarization
+To supplement VQA and KIE results, we examine
+how Arctic-TILT exploits layout information and
+captures long-range dependencies in the LoRaLay
+collection of summarization tasks where, in con-
+trast to the majority of similar datasets, input is
+not plain text but a scientific document with rich
+structure (Nguyen et al., 2023).
+Results presented in Table 3 show that even
+though, in contrast to the previous SOTA, we had
+no pretraining objective explicitly designed for the
+summarization task, we could outperform the best
+model by a few points on both ArXiv-Lay and
+PubMed-Lay.
+0102030
+1-56-1011-1516-2021-3031-4041-5051-
+13,318,414,216,522,218,921,426,65075100
+0-shot5-10-15-20-25-shot
+5075100
+0-shot5-10-15-20-25-shot
+Table 1PageArctic-TILT (MP)GRAM (MP)Arctic-TILT (SlideVQA)Arctic-TILT (MMLong)32K + OCR1 - 577,178,257,226,66 - 1072,974,455,321,411 - 1569,769,652,618,916 - 2072,677,250,322,221 - 3016,531 - 4014,241 - 5018,4-5013,3MethodANLSAccuracyPage 0Page 1Page 2Page 3Page 4TILT ﬁnetuned optuna 30,812250,78700,86390,79670,75510,73120,7105GRAM0,803219,98410,83800,78540,75280,79080,7452
+1-526.66-1021.411-1518.916-2022.221-3016.531-4014.241-5018.450-1000013.3
+Payment StubsGhega Patents0-shot52,437,9paystubs:5-92,276,70-shot: 52.410-93,282,85-shot: 92.215-93,586,110-shot: 93.220-93,490,115-shot: 93.525-shot94,989,720-shot: 93.430-shot95,290,525-shot: 94.930-shot: 95.2ghega:0-shot: 37.95-shot: 76.710-shot: 82.815-shot: 86.120-shot: 90.125-shot: 89.730-shot: 90.5Page
+020406080
+1-56-1011-1516-
+72,669,772,977,1MP-DocVQA
+020406080
+1-56-1011-1516-
+50,352,655,357,2SlideVQA
+MMLongBench-DocPayment Stubs
+Ghega PatentsGPT-4o
+GPT-4o2Figure 6: Improvement of Arctic-TILT zero-shot accu-
+racy given fine-tuning on up to 25 annotated documents.
+Zero-shot performance of GPT-4o for comparison.
+4.3 Adapting to Novel Use Cases
+Some optimizations introduced in Arctic-TILT aim
+to improve training performance under the minimal
+memory regime. These capabilities enable further
+improvement of the model in a production environ-
+ment, especially when encountering out-of-domain
+examples or novel use cases, and appear vital in
+line with previous works, which have shown that
+smaller LLMs can outperform larger, prompted
+models assuming we allow fine-tuning (Zhao et al.,0.0
+Conﬁdence
+0.0
+0.5
+0.5
+1.0
+1.0
+Model accuracy (mean score)
+Model
+95% CI
+IdealFigure 7: Arctic-TILT calibration.
+2024; Bucher and Martini, 2024).
+We study how the zero-shot accuracy of Arctic-
+TILT increases, given fine-tuning on up to 25 an-
+notated documents from holdout datasets. In par-
+ticular, we rely on Ghega patents (Medvet et al.,
+2011) and a private dataset of payment stubs and
+compare the model’s performance to GPT-4o (refer
+to Appendix D for dataset’s details).
+Results shown in Figure 6 demonstrate that
+Arctic-TILT quickly approaches the accuracy of
+GPT-4o with as few as five annotated examples
+and outperform it given slightly more. These find-
+ings support the argument for employing special-
+ized, ‘smaller’ LLMs over a single general-purpose
+model in production, emphasizing the solution’s
+cost-effectiveness and adaptability.
+4.4 Confidence Calibration
+Following the postulate of Van Landeghem et al.
+(2023), we evaluate the Expected Calibration Error
+(ECE) and Area Under the Risk-Coverage Curve
+(AURC) on the DUDE dataset. Each answer’s con-
+fidence is computed from a list of per-token scores.
+In contrast to some previous works, we take the
+minimum score in the list rather than the geometric
+mean as we found it empirically superior.
+Obtained results show exceptional calibration
+and confidence assessment, achieving a state-of-
+the-art ECE of 7.6, significantly improving upon
+the previous best of 19.0. This suggests a closer
+alignment between model confidence and accuracy.
+Additionally, our AURC of 25.3, which surpasses
+the previous best of 44.0, demonstrates that our
+model can effectively discriminate between correct
+Table 1InputPhi-3 MiniTILT (KV)TILT4000253,43,46500415,35,37,735849056603771600010313,113,16400041251,951,95120003298414,5775InputPhi-3 MiniTILT (KV)TILT4000273,63,66500415,35,31600010413,613,66400041353,653,6512000329913571
+10100100010000
+     
+775
+52
+13
+5
+3
+415
+52
+13
+5
+3
+3 298
+412
+103
+41
+25
+Phi-3 Mini
+Arctic-TILT (KV)
+(no KV)0102030
+1-56-1011-1516-2021-3031-4041-5051-
+13,318,414,216,522,218,921,426,6020406080
+1-56-1011-1516-
+72,669,772,977,1MP-DocVQA
+020406080
+1-56-1011-1516-
+50,352,655,357,2SlideVQA
+MMLongBench-Doc
+10100100010000
+4k6.5k16k64k512k
+13 571
+54
+14
+5
+4
+54
+14
+5
+4
+3 299
+413
+104
+41
+27VQA / KIE
+Summarization
+Expert (~90%)10100100010000
+4k6.5k16k64k512k
+Phi-3 MiniArctic-TILT8x less TFLOPs
+6.5k
+1Figure 8: Arctic-TILT’s computational efficiency
+(TFLOPs, lower is better) compared to Phi-3 Mini on
+VQA/KIE given inputs ranging from 4k to 512k tokens.
+and incorrect predictions. It also shows our model’s
+ability to appropriately assign low-confidence to
+predictions demanding additional human review.
+To explore the landscape beyond a single dataset,
+we provide results on 18k data points sampled from
+fourteen private and public datasets in Figure 7.
+The analysis confirms low ECE and indicates that
+the Arctic-TILT confidence score is well calibrated
+as the accuracy (mean score) follows the diagonal
+y=xon the calibration plot.
+4.5 Computational Efficiency
+The imperative for businesses to rapidly and effi-
+ciently process substantial document volumes calls
+for models that maximize throughput while also
+maximizing operational efficiency.
+To address this aspect of the model, we analyze
+the inference floating point operations per second
+(TFLOP) required for Arctic-TILT compared to
+Phi-3 Mini (Abdin et al., 2024), an example of
+a decoder-only model featuring 3.8B parameters
+and optimized by resorting to the attention sliding
+window. The latter was selected as a well-known
+reference model concerning the limited memory
+and compute regime we aim at, though it is not
+capable of achieving satisfactory accuracy on Doc-
+ument Understanding tasks.
+Results presented in Figure 8 indicate that Arctic-
+TILT consistently demands lower TFLOP across
+all context lengths for our primary use case of
+VQA/KIE,2reflecting its smaller parameter size.
+2We assume the output of 8 tokens, which is longer thanImportantly, concerning the input of 6.5k tokens,
+the mean input length for VQA/KIE tasks consid-
+ered before, we require 8 ×less operations.

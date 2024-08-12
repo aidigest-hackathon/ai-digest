@@ -70,3 +70,5 @@ def evaluate_summary(inputs):
     for result in results:
         for eval_result in result["evaluation_results"]:
             print(eval_result.get("key"), eval_result.get("score"))
+
+

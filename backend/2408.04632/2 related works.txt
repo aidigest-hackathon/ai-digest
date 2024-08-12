@@ -1,0 +1,69 @@
+2 Related Works
+The appearance of LLMs is a result of trends that
+have also been strongly visible in the DU field in
+recent years.
+Traditionally, tasks like table or information ex-
+traction from Visually Rich Documents were bro-arXiv:2408.04632v1  [cs.CL]  8 Aug 2024TILT Arctic-TILT
+Vision Encoding and its Fusion with Text
+sum of text & image fusion by tensor product
+first layer only every encoder layer
+Pretraining and Finetuning
+400k steps of adaptation 900k steps of adaptation
+SFT on 4 datasets SFT on 17 datasets
+Transformer
+dense attention, vanilla sparse attention, SLED
+max 9k tokens max 400k tokens
+basic optimization heavy optimization
+Table 1: Comparison of TILT and Arctic-TILT.
+ken down into separate steps, such as form recogni-
+tion, field detection, and value extraction (Prabhu
+et al., 2021; Medvet et al., 2011; Rusiñol et al.,
+2013; Peanho et al., 2012; Tian et al., 2016; Le
+et al., 2019; Baek et al., 2019; Holt and Chisholm,
+2018; Wang et al., 2021; Carbonell et al., 2019).
+Each of these steps typically required distinct mod-
+els or heuristics and processing pipelines that were
+later approached in a more end-to-end manner em-
+ploying graph-based approaches (Liu et al., 2019;
+Hwang et al., 2021; Yu et al., 2021; Wang et al.,
+2024, inter alia ).
+Ultimately, the DU field has converged on formu-
+lating tasks in a unified text-to-text format due to
+its robustness in handling various problems, which
+LLMs align well with due to their generic input-
+output format (Mathew et al., 2021b,a; Borchmann
+et al., 2021). Although this approach appears ele-
+gant and its ease of application makes it appealing
+for industrial-scale implementation, treating docu-
+ments as pure text is often insufficient, particularly
+where layout-intensive aspects dominate. Hence,
+there has been a recent surge in extending LLMs
+with visual (Li et al., 2023; Wu et al., 2023), lay-
+out modality (Fujitake, 2024), or both (Mao et al.,
+2024; Li et al., 2024; Tang et al., 2023) to better
+capture the nuances of document structures and
+improve performance on layout-intensive tasks.
+A separate line of work approaches DU prob-
+lems using vision-only models (Kim et al., 2021,
+2022; Lee et al., 2023; Beyer et al., 2024), assum-
+ing one can address the problem without specific
+architectural biases. However, models with textual
+input outperform them with a notable example of
+GPT-4 Vision that benefits from the availability of
+OCR-recognized text (Borchmann, 2024).
+Despite these advancements and the significant
+benefits the scale of LLMs offers, we provide argu-
+StackProjection O
+Sum
+Text
+embeddingImage
+embeddingMultiplication
+SumProjection V Projection RSumFused
+embedding
+LayerNormDropoutFigure 2: Arctic-TILT modality fusion. It can be seen as
+attention with role vector (Schlag et al., 2019) simplified
+concerning we calculate it over a pair of aligned text
+and image tokens.
+ments for smaller, problem-specific models, simi-
+larly to Fu et al. (2024); Zhao et al. (2024) and fo-
+cus on cost-efficient deployment (Ong et al., 2024).

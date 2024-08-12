@@ -1,0 +1,55 @@
+The vast portion of workloads employing
+LLMs involves answering questions grounded
+on PDF or scan content. We introduce the
+Arctic-TILT achieving accuracy on par with
+models 1000 ×its size on these use cases. It can
+be fine-tuned and deployed on a single 24GB
+GPU, lowering operational costs while process-
+ing Visually Rich Documents with up to 400k
+tokens. The model establishes state-of-the-art
+results on seven diverse Document Understand-
+ing benchmarks, as well as provides reliable
+confidence scores and quick inference, which
+are essential for processing files in large-scale
+or time-sensitive enterprise environments.
+SNOWFLAKE CORPORATE GOOGLE SLIDES THEME 2024 v1.1
+© 2024 Snowflake Inc. All Rights ReservedAnswer: How many attorneys are listed for the plaintiffs?Fill out the template with the amount, date, and IBAN.2Answer QuestionsExtract Key InformationSummarize ContentFinetune ModelArctic-TILTArctic-TILTSoftwareHardware Semi-Conductors
+Get crucial terms of the non-disclosure agreement.Learn new scenarios or increase accuracy on existing ones.SNOWFLAKE CORPORATE GOOGLE SLIDES THEME 2024 v1.1
+© 2024 Snowflake Inc. All Rights ReservedAnswer: How many attorneys are listed for the plaintiffs?Fill out the template with the amount, date, and IBAN.2Answer QuestionsExtract Key InformationSummarize ContentFinetune ModelArctic-TILTArctic-TILTSoftwareHardware Semi-Conductors
+Get crucial terms of the non-disclosure agreement.Learn new scenarios or increase accuracy on existing ones.
+SNOWFLAKE CORPORATE GOOGLE SLIDES THEME 2024 v1.1
+© 2024 Snowflake Inc. All Rights ReservedAnswer: How many attorneys are listed for the plaintiffs?Fill out the template with the amount, date, and IBAN.2Answer QuestionsExtract Key InformationSummarize ContentFinetune ModelArctic-TILTArctic-TILTSoftware
+Get crucial terms of the non-disclosure agreement.Learn new scenarios or increase accuracy on existing ones.Arctic-TILT24GB GPU500 PAGES
+Figure 1: Arctic-TILT consumes long, richly formatted
+PDFs given a single, cost-efficient GPU and can produce
+their summary, answer questions, and extract values,
+outperforming vastly heavier LLMs and LVLMs.
+∗See Appendix E for contributions.1 Introduction
+General-purpose LLMs and their multi-modal
+counterparts provide a crucial advantage in pro-
+cess automation: they can be applied immediately,
+eliminating the expensive and time-consuming ef-
+forts of creating dedicated system architecture
+and model development. Though they are suit-
+able choices for prototyping and building proof-
+of-concept solutions, once the case is validated,
+it becomes essential to consider the demands of
+real-world deployments, such as cost-efficiency (Fu
+et al., 2024; Ong et al., 2024), fine-tunability (Liu
+et al., 2022), and ensuring accurate confidence cali-
+bration (Van Landeghem, 2024).
+We consider these issues in the context of Docu-
+ment Understanding (DU), where it is commonly
+required to integrate textual, layout and graphical
+clues to obtain the required information and intro-
+duce the Arctic-TILT, designed to address the needs
+of broad-use deployments, cost efficiency, and do-
+main adaptations for a fraction of the cost of the
+leading models. The proposed solution achieves
+state-of-the-art accuracy on business and long doc-
+ument benchmarks of MP-DocVQA (Tito et al.,
+2023), DUDE (Van Landeghem et al., 2023), Kleis-
+ter NDA and Charity (Stanislawek et al., 2021),
+ArXiv-Lay and PubMed-Lay (Nguyen et al., 2023),
+and remains competitive with orders of magnitude
+larger models on other document VQA datasets.

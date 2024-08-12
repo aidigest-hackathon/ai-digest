@@ -1,0 +1,198 @@
+3 Arctic-TILT
+Our starting point is the TILT encoder-decoder
+model, built upon T5 (Raffel et al., 2020) by (1)
+extending its sequential positional bias with an at-
+tention bias based on relative horizontal and ver-
+tical distances between each pair of tokens, and
+(2) adding contextualized image embeddings that
+cover the token image region semantics in the con-
+text of its entire visual neighborhood (Powalski
+et al., 2021).
+We further enhance TILT’s performance and re-
+move limitations. Specifically, we propose novel
+modality fusion, introduce attention sparsity, en-
+hance training recipe, and optimize training andinference (Table 1). Improved variant of the model
+is referred to as the Arctic-TILT.
+3.1 Fusion of Text and Vision
+The TILT model’s unique approach to combin-
+ing visual and textual semantics involves summing
+word embeddings and RoI-pooled representations
+of the word’s bounding box with a variant of the U-
+Net network used as an image encoder. Visual and
+textual features are integrated once, immediately
+after embedding both inputs.
+We begin by replacing the post-embedding sum-
+mation of text and vision modalities from the origi-
+nal TILT with our proposed mechanism, integrated
+within each transformer block.
+Fusion by Tensor Product. In contrast to Powal-
+ski et al. (2021), we opt for the fusion of modal-
+ities inspired by tensor product representations
+(Smolensky, 1990; Schmidhuber, 1993) and their
+Hadamard approximation (Schlag et al., 2019).
+Specifically, given the text and image embeddings
+t, i∈Rd, we calculate the fused embedding with:
+Fuse( t, i) =O(V(t+i)⊙(1+Rt)) +t
+where V,R, andOareRd×dtrainable parameters.
+In practice, we use a variant of this mechanism with
+additional layer norm and dropout, as depicted in
+Figure 2 and Listing 1.
+Module placement. Having described the mech-
+anism of integrating two modalities together, the
+question arises on the positioning of the fusion
+module within the transformer block.
+We found that placing the fusion module after
+FFNs is most beneficial as the fusion results are di-
+rectly fed to the next layer (Figure 3). Additionally,
+by applying fusion after every encoder layer, we
+mitigate the vanishing gradient effect and enable
+the model to focus on different visual features as
+its comprehension of the document improves.
+3.2 Long Context Support
+Concerning the product-oriented nature of our
+work, it is essential to cover a significant fraction
+of real-world documents of potentially arbitrary
+lengths while operating within limited resources.
+The outlined optimizations are guided by the
+need to handle as much context as possible on
+widely available A10 and L4 GPUs equipped with
+24GB vRAM. We assume a single-GPU setup and
+measure the impact of applied techniques and ar-
+chitectural changes on the maximum context length
+Contextualized
+Vision
+Multi-Head
+Attention1D + 2D
+BiasesFeed
+Forward
+Textual
+SemanticsF
+NxDecoderFigure 3: The Arctic-TILT encoder block combines Con-
+textualized Vision from U-Net and Textual Semantics
+from input embeddings through Fusion (F) operation.
+TheMulti-Head Attention is augmented with 1D and
+2D positional biases to capture spatial and sequential
+arrangement. This procedure is repeated in each layer
+(Nx), allowing to process integrated information further.
+used during the finetuning and inference under this
+memory budget.
+Chunked processing. To address the quadratic
+complexity of self-attention computation in the
+encoder, we employ a variant of fusion-in-
+decoder (de Jong et al., 2023), also known as
+blockwise encoding (Pietruszka et al., 2022) or
+SLED (Ivgi et al., 2022) with zero chunk padding.
+This method restricts the encoder attention ma-
+trix to a neighborhood around its diagonal with
+a bounded width. Without padding, this results
+in a block diagonal matrix, reducing the number
+of non-zero attention weights to a linear quantity
+relative to the input sequence length.
+Specifically, for a fixed core chunk length c, and
+overlap size o, being hyperparameters of our model,
+prefix of length land total input size C=n·c,
+we build a sequence of chunks in the following
+manner: chunk number 1is filled with ltokens of
+prefix, and with tokens 0, .., c−lof the input. Say
+chunk number ialready used input tokens of up to
+t. Chunk number i+1starts with ltokens of prefix,
+followed with tokens t−o+ 1, t−o+ 2, ..., t−
+o+c−lof the input. In practice, we found a core
+chunk length of 1024 and no overlap to performInput  lengthTarget
+lengthChunk  lengthEncoder(A) TIL T (B) Arctic-TIL T
+Fusion
+DecoderFigure 4: An illustration of sparse attention matrices
+assuming a two-layer encoder and decoder. The origi-
+nal TILT (A) consumes the complete input at once, in
+contrast to Arctic-TILT (B) with blockwise attention
+robustly across most tasks (see Appendix C).
+The resulting sequences are passed through the
+encoder separately. The encoder outputs are then
+recombined by removing the prefix tokens embed-
+dings from all but the first chunk and concatenating
+the results. The resulting encoder output is passed
+to the decoder (see Figure 4).
+Since the underlying attention implementation is
+already memory efficient, this technique improves
+the computational efficiency in training and infer-
+ence, resulting in a 10-fold increase in input length
+during training and inference.
+Nested stack checkpointing. Implementing gra-
+dient checkpointing over the entire 24-layer en-
+coder stack reduces the memory required for acti-
+vations. Only the last layer’s activations are stored,
+which are necessary for the decoder. Consequently,
+memory savings are significant here, as the require-
+ment for processing 1M tokens reduced from 96GB
+to merely 4GB for the encoder part, albeit at the
+cost of an additional forward pass through the en-
+coder. This improvement allowed to quadruple the
+input length for training.Random chunks. While our modifications effec-
+tively handle the encoder’s memory limitations, the
+length of concatenated chunk embeddings can still
+cause the decoder cross-attention to exceed avail-
+able memory. Technically, the model can handle
+230k tokens during the training, which was further
+addressed with a simple method that allows for ex-
+tending the length of the document while also posi-
+tively impacting the scores. We randomly discard
+chunks, effectively exposing the model to the differ-
+ent parts of longer documents across epochs. The
+first chunk, typically containing the initial pages, is
+always preserved to provide essential context.
+In addition to primary techniques, we employ
+several other optimizations. Specifically, we use
+mixed precision training with bfloat16 while turn-
+ing off weight caching to save RAM, leading to
+a 2×improvement in inference input length. Sec-
+ondly, by recomputing projections for each decoder
+layer instead of using the key-value cache, we ex-
+tend the maximum inference context to 389k to-
+kens. Next, we optimize training by offloading the
+decoder’s activations needed for backpropagation
+from GPU to CPU, minimizing peak memory usage
+of the GPU by increasing processing time. Finally,
+implementing memory-efficient attention reduces
+the memory overhead of the attention mechanism
+(Rabe and Staats, 2022).
+Ultimately, our optimizations culminate in signifi-
+cant memory usage improvements, allowing us to
+effectively train and deploy Arctic-TILT for doc-
+uments up to 500 pages1on a single 24GB GPU.
+The step-by-step summary is studied in Table 2.
+3.3 Pretraining and Finetuning
+The training process began with a self-supervised
+pretraining phase using the pretrained T5 large
+model (Raffel et al., 2020). Following the introduc-
+tion of TILT architecture changes, which included
+U-Net (Ronneberger et al., 2015) and 2D biases,
+as well as text-vision post-fusion, the model un-
+derwent further self-supervised pretraining for a
+total of 900k steps based on documents from the
+CCpdf (Turski et al., 2022) and OCR-IDL (Biten
+et al., 2022). These two large-scale, publicly avail-
+able PDF resources come with OCR results from
+Tesseract and Amazon Textract, respectively.
+1Specifically, 390k input tokens with an output of 128
+tokens, corresponding to 780 tokens per page on average.Inference Training
+Vanilla TILT 9k 4k
++ attention sparsity 87k 41k
++ mixed precision 179k 51k
++ memory efficient attention 183k 56k
+Inference-only optimizations
++ no cross-attention KV cache 389k
+Training-only optimizations
++ nested checkpointing 230k
++ CPU offloading 256k
++ random chunks 389k
+Table 2: Max input length (tokens) consumed during
+training and inference given single 24GB GPU. Tested
+for documents up to 500 pages (389k tokens).
+Finally, the model was fine-tuned on QA and
+KIE datasets. In this phase, we increase the number
+of supervised datasets to 17, compared to TILT’s
+original choice of four. The datasets chosen rep-
+resent critical aspects of DU tasks, including, but
+not limited to, forms, financial reports, charts, in-
+voices, insurance documents, contracts, and legal
+documents (detailed in Appendix B).
