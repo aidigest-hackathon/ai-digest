@@ -108,11 +108,11 @@ class Result(BaseModel):
 def build_state(date:str):
     # 'YYYY-MM-DD'
 
-    state = {}
-    
+    states = []
     papers = ["2408.04632", "2104.00783", "2408.02545", "2408.04628", "2408.04631", "2408.04633"]
     parsed_paper = []
     for paper in papers:
+        state = {}
         
         for file in os.listdir(paper):
             if file.endswith('.txt'):
@@ -124,8 +124,9 @@ def build_state(date:str):
             state['keep_refining'] = True
             state['entities'] = []
             state['draft_version'] = 0
+        states.append(state)
 
-    return state
+    return states
 
 class GPTSummarizer:
     def __init__(self):
@@ -287,10 +288,12 @@ def get_complex_summary():
     except Exception as e:
         print(f"An error occurred: {e}")
         
-    state = build_state('2024-08-08')
-
-    result = app.invoke(state)
-    return result
+    states = build_state('2024-08-08')
+    results = []
+    for state in states:
+        result = app.invoke(state)
+        results.append(result)
+    return results
 
 class StyleGen:
     def __init__(self, draft):
@@ -316,29 +319,33 @@ class StyleGen:
 
 
 def driver():
-    summary_state = get_complex_summary()
+    summary_states = get_complex_summary()
+    new_states = []
+    for summary_state in summary_states:
 
-    complex_summary = summary_state["draft_summary"]
+        complex_summary = summary_state["draft_summary"]
 
-    styler = StyleGen(complex_summary)
-    beginner_prompt = f"""Given a technical summary of a computer science research paper, please output a beginner-friendly summary with no additional explanation or starting text, just the final summary itself.
-    Your input is summary: {{Summary}}
+        styler = StyleGen(complex_summary)
+        beginner_prompt = f"""Given a technical summary of a computer science research paper, please output a beginner-friendly summary with no additional explanation or starting text, just the final summary itself.
+        Your input is summary: {{Summary}}
 
-    Summary: {complex_summary}"""
+        Summary: {complex_summary}"""
 
-    intermediate_prompt = f"""Given a technical summary of a computer science research paper, please output an intermediately technical summary with no additional explanation or starting text, just the final summary itself.
-    Your input is summary: {{Summary}}
+        intermediate_prompt = f"""Given a technical summary of a computer science research paper, please output an intermediately technical summary with no additional explanation or starting text, just the final summary itself.
+        Your input is summary: {{Summary}}
 
-    Summary: {complex_summary}"""
+        Summary: {complex_summary}"""
 
-    beginning_summary = styler.get_styled(beginner_prompt)
-    intermediate_summary = styler.get_styled(intermediate_prompt)
+        beginning_summary = styler.get_styled(beginner_prompt)
+        intermediate_summary = styler.get_styled(intermediate_prompt)
 
-    new_state = summary_state.copy()
-    new_state["beginner_result"] = beginning_summary
-    new_state["intermediate_result"] = intermediate_summary
-    new_state["advanced_result"] = complex_summary
-    return new_state
+        new_state = summary_state.copy()
+        new_state["beginner_result"] = beginning_summary
+        new_state["intermediate_result"] = intermediate_summary
+        new_state["advanced_result"] = complex_summary
+
+        new_states.append(new_state)
+    return new_states
 
 
 def upload_to_bucket(state):
@@ -359,16 +366,23 @@ def upload_to_bucket(state):
 
 
 if __name__ == "__main__":
-    new_state = driver()
-    # breakpoint()
-    output_str = ""
-    output_str+=f"Draft Summary: {new_state['draft_summary']}\n"
-    output_str+=f"Beginner Summary: {new_state["beginner_result"]}\n"
-    output_str+=f"Intermediate Summary: {new_state["intermediate_result"]}\n"
-    output_str+=f"Advanced Summary: {new_state["advanced_result"]}\n"
-    
-    with open ("output.txt", "w") as f:
-        f.write(output_str)
+    new_states = driver()  
+    # breakpoint()  
+    for idx, new_state in enumerate(new_states):
+        # pass 
+        # upload_to_bucket(new_state)
 
-    print(output_str)
-    # upload_to_bucket(new_state)
+
+        output_str = ""
+        output_str+=f"Draft Summary: {new_state['draft_summary']}\n"
+        output_str+=f"Beginner Summary: {new_state["beginner_result"]}\n"
+        output_str+=f"Intermediate Summary: {new_state["intermediate_result"]}\n"
+        output_str+=f"Advanced Summary: {new_state["advanced_result"]}\n"
+        
+        with open (f"output_{idx}.txt", "w") as f:
+            f.write(output_str)
+
+        print(output_str)
+    # # upload_to_bucket(new_state)
+
+    # new_state

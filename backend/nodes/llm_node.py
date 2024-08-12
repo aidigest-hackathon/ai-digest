@@ -21,14 +21,3 @@ def get_model_chain(model:ChatOpenAI, prompt) -> Any:
     """Load the model chain that can be invoked with user input"""
     prompt = hub.pull("basic_research_curation_prompt")
     return prompt | model
-
-def run_agent(state: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Run the agent on the given state
-    """
-    messages = state['messages']
-    tools = 
-    llm_chain = get_model_chain(get_model(), messages)
-    response = llm_chain.invoke(messages)
-    return response
-
